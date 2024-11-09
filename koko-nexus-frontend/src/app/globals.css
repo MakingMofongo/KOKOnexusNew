@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Modern Purple Theme */
+    --purple-dark: 260 60% 25%;     /* Deep purple */
+    --purple-main: 260 70% 45%;     /* Main purple */
+    --purple-light: 260 80% 65%;    /* Light purple */
+    --purple-ghost: 260 80% 97%;    /* Super light purple */
+    --white-pure: 0 0% 100%;        /* Pure white */
+    --white-soft: 260 25% 97%;      /* Soft white with purple tint */
+    --gray-cool: 260 20% 92%;       /* Cool gray */
+    
+    /* Accent Colors */
+    --accent-gradient: linear-gradient(135deg, hsl(260 70% 45%), hsl(280 70% 55%));
+    --glass-gradient: linear-gradient(
+      135deg, 
+      hsla(260 80% 97% / 0.1),
+      hsla(260 80% 97% / 0.05)
+    );
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px hsla(260 50% 20% / 0.1);
+    --shadow-md: 0 4px 16px hsla(260 50% 20% / 0.15);
+    --shadow-lg: 0 8px 32px hsla(260 50% 20% / 0.2);
+    
+    /* UI Colors */
+    --background: var(--white-pure);
+    --foreground: var(--purple-dark);
+    --muted: var(--gray-cool);
+    --muted-foreground: var(--purple-main);
+    --border: var(--gray-cool);
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-[hsl(var(--white-pure))] text-[hsl(var(--purple-dark))] antialiased;
+  }
+}
+
+@layer components {
+  .gradient-bg {
+    @apply bg-[hsl(var(--white-soft))];
+  }
+  
+  .accent-gradient {
+    @apply bg-[var(--accent-gradient)];
+  }
+
+  .glass-panel {
+    @apply bg-[var(--glass-gradient)] backdrop-blur-lg border border-[hsl(var(--purple-ghost))] 
+           rounded-2xl shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] transition-shadow;
+  }
+
+  .heading-1 {
+    @apply text-5xl sm:text-6xl lg:text-7xl font-bold font-space tracking-tight;
+  }
+
+  .heading-2 {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-bold font-space tracking-tight;
+  }
+
+  .heading-3 {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold font-space tracking-tight;
+  }
+
+  .body-large {
+    @apply text-xl sm:text-2xl text-[hsl(var(--purple-main))] leading-relaxed;
+  }
+
+  .body-base {
+    @apply text-lg text-[hsl(var(--purple-main))] leading-relaxed;
+  }
+
+  .button-primary {
+    @apply px-8 py-4 rounded-full bg-[hsl(var(--purple-main))] text-[hsl(var(--white-pure))] 
+           font-medium shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] 
+           hover:translate-y-[-2px] active:translate-y-[0px]
+           transition-all duration-200;
+  }
+
+  .button-secondary {
+    @apply px-8 py-4 rounded-full border-2 border-[hsl(var(--purple-main))] 
+           text-[hsl(var(--purple-main))] font-medium
+           hover:bg-[hsl(var(--purple-ghost))] hover:translate-y-[-2px] 
+           active:translate-y-[0px] transition-all duration-200;
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[hsl(var(--white-soft))];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[hsl(var(--purple-main)/0.2)] rounded-full 
+         hover:bg-[hsl(var(--purple-main)/0.3)] transition-colors;
+}
+

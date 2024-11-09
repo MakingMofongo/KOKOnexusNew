@@ -1,0 +1,18 @@
+mkdir src\app\auth\login
+mkdir src\app\auth\signup
+mkdir src\app\marketing
+mkdir src\app\dashboard\deploy
+mkdir src\app\dashboard\assistants
+mkdir src\app\dashboard\analytics
+mkdir src\components\ui
+mkdir src\components\shared
+mkdir src\components\deploy
+mkdir src\components\marketing
+mkdir src\components\analytics
+mkdir src\lib\constants
+mkdir src\lib\store
+mkdir src\lib\api
+mkdir src\lib\hooks
+mkdir src\lib\utils
+npm install framer-motion @types/framer-motion
+npm install zustand@4.5.2
