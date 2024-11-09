@@ -55,28 +55,28 @@ koko-nexus-frontend/
 
 ## Current Implementation Status
 
-### 1. Core Setup ✅
+### 1. Core Setup (done)
 - Next.js 14 with App Router
 - TypeScript configuration
 - TailwindCSS setup
 - ESLint configuration
 
-### 2. Design System ✅
+### 2. Design System  (doing)
 - Color system implemented
 - Typography scale defined
 - Component base styles
 - Animation constants
 
-### 3. Base Components ✅
+### 3. Base Components (doing)
 - Navigation
 - Layout components
 - Deployment flow components
 - Marketing components
 
-### 4. State Management ✅
+### 4. State Management (doing)
 - Zustand store setup
 - Deployment state handling
-- API integration structure
+- API integration structure (doing) (bugs)
 
 ## Planned Features
 
