@@ -2,6 +2,10 @@
 
 ## Vapi API Integration Status
 
+
+
+### Misc
+- [ ] Put entire backend in a separate 'backend' folder
 ### Calls
 - [ ] GET List Calls
 - [ ] POST Create Call
@@ -22,6 +26,7 @@
 - [x] GET Get Phone Number
 - [x] DEL Delete Phone Number
 - [x] PATCH Update Phone Number
+- [ ] TWILIO Get available numbers (Ayoub)
 
 ### Squads
 - [ ] GET List Squads
