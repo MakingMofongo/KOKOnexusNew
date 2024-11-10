@@ -21,11 +21,21 @@ interface DeploymentState {
   deploymentStatus: 'idle' | 'deploying' | 'success' | 'error'
   deploymentResult: DeploymentResult | null
   deploymentError: string | null
+  industry: string | null
+  template: string | null
+  customConfig?: {
+    industry: string
+    businessType: string
+    primaryLanguage: string
+    additionalLanguages: string[]
+    tone: string
+  }
   setStep: (step: DeploymentState['step']) => void
   setIndustry: (industry: string) => void
   setTemplate: (template: string) => void
   setVoice: (voice: DeploymentState['selectedVoice']) => void
   setNumber: (number: DeploymentState['selectedNumber']) => void
+  setCustomConfig: (config: any) => void
   deploy: () => Promise<void>
   reset: () => void
 }
@@ -39,12 +49,16 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
   deploymentStatus: 'idle',
   deploymentResult: null,
   deploymentError: null,
+  industry: null,
+  template: null,
+  customConfig: undefined,
 
   setStep: (step) => set({ step }),
   setIndustry: (industry) => set({ selectedIndustry: industry }),
   setTemplate: (template) => set({ selectedTemplate: template }),
   setVoice: (voice) => set({ selectedVoice: voice }),
   setNumber: (number) => set({ selectedNumber: number }),
+  setCustomConfig: (config) => set({ customConfig: config }),
 
   deploy: async () => {
     const state = get()
@@ -63,7 +77,22 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
         template: state.selectedTemplate,
         voice: state.selectedVoice.id,
         phoneNumber: state.selectedNumber.number,
-        // ... other required fields
+        size: 'small',
+        region: 'US',
+        expectedCallVolume: 100,
+        businessHours: {
+          timezone: 'America/New_York',
+          weekdays: {
+            start: '09:00',
+            end: '17:00'
+          },
+          weekend: {
+            start: '10:00',
+            end: '15:00'
+          }
+        },
+        languages: ['en'],
+        tone: 'professional'
       }
 
       // Deploy
@@ -90,5 +119,8 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
     deploymentStatus: 'idle',
     deploymentResult: null,
     deploymentError: null,
+    industry: null,
+    template: null,
+    customConfig: undefined,
   }),
 })) 

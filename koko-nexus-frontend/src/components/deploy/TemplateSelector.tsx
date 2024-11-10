@@ -4,32 +4,88 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { useDeploymentStore } from '@/lib/store/deploymentStore'
+import { CustomTemplateForm } from './CustomTemplateForm'
+import { PreConfiguredTemplates } from './PreConfiguredTemplates'
+import { LanguageSelector } from './LanguageSelector'
+import { 
+  Building2, 
+  HeartPulse, 
+  Settings2, 
+  ShoppingBag, 
+  Stethoscope, 
+  Calendar,
+  HeadsetIcon,
+  ClipboardCheck,
+  Users,
+  MessageCircle,
+  PhoneCall,
+  Wrench
+} from 'lucide-react'
 
 const templates = [
   {
-    id: 'retail',
-    name: 'Retail Assistant',
-    description: 'Perfect for stores and customer service',
-    icon: '/icons/retail.svg',
+    id: 'hotel',
+    name: 'Hotel Assistant',
+    description: 'Perfect for hotels and hospitality services',
+    icon: <Building2 className="w-6 h-6 text-purple-600" />,
     popular: true,
+    preConfigured: true,
     templates: [
-      { id: 'sales', name: 'Sales Assistant', icon: '💰' },
-      { id: 'support', name: 'Support Agent', icon: '🎯' },
-      { id: 'booking', name: 'Booking Agent', icon: '📅' },
+      { 
+        id: 'frontdesk', 
+        name: 'Front Desk Assistant', 
+        icon: <Users className="w-8 h-8 text-purple-600" />, 
+        description: 'Handles check-ins, reservations and guest services' 
+      },
+      { 
+        id: 'concierge', 
+        name: 'Concierge Service', 
+        icon: <HeadsetIcon className="w-8 h-8 text-purple-600" />, 
+        description: 'Manages guest requests and local recommendations' 
+      },
+      { 
+        id: 'roomservice', 
+        name: 'Room Service Agent', 
+        icon: <Calendar className="w-8 h-8 text-purple-600" />, 
+        description: 'Handles room service orders and special requests' 
+      },
     ]
   },
   {
     id: 'healthcare',
     name: 'Healthcare Assistant',
     description: 'HIPAA-compliant medical office assistant',
-    icon: '/icons/healthcare.svg',
+    icon: <HeartPulse className="w-6 h-6 text-purple-600" />,
+    preConfigured: true,
     templates: [
-      { id: 'scheduling', name: 'Appointment Scheduler', icon: '📅' },
-      { id: 'triage', name: 'Triage Assistant', icon: '🏥' },
-      { id: 'followup', name: 'Follow-up Coordinator', icon: '📞' },
+      { 
+        id: 'scheduling', 
+        name: 'Appointment Scheduler', 
+        icon: <Calendar className="w-8 h-8 text-purple-600" />, 
+        description: 'Medical appointment management' 
+      },
+      { 
+        id: 'triage', 
+        name: 'Triage Assistant', 
+        icon: <Stethoscope className="w-8 h-8 text-purple-600" />, 
+        description: 'Initial patient assessment' 
+      },
+      { 
+        id: 'followup', 
+        name: 'Follow-up Coordinator', 
+        icon: <PhoneCall className="w-8 h-8 text-purple-600" />, 
+        description: 'Patient follow-up management' 
+      },
     ]
   },
-  // Add more industry templates...
+  {
+    id: 'custom',
+    name: 'Custom Configuration',
+    description: 'Build your own template from scratch',
+    icon: <Settings2 className="w-6 h-6 text-purple-600" />,
+    preConfigured: false,
+    templates: []
+  }
 ]
 
 export function TemplateSelector() {
@@ -37,15 +93,53 @@ export function TemplateSelector() {
   const setTemplate = useDeploymentStore(state => state.setTemplate)
   const setStep = useDeploymentStore(state => state.setStep)
   const [selectedIndustry, setSelectedIndustryState] = React.useState<string | null>(null)
+  const [customConfig, setCustomConfig] = React.useState({
+    industry: '',
+    businessType: '',
+    tone: 'professional'
+  })
 
-  const handleTemplateSelect = (templateId: string) => {
-    setTemplate(templateId)
-    setStep('voice')
-  }
+  const [showLanguageSelector, setShowLanguageSelector] = React.useState(false)
+  const [selectedTemplate, setSelectedTemplateState] = React.useState<string | null>(null)
 
   const handleIndustrySelect = (industryId: string) => {
     setSelectedIndustryState(industryId)
     setIndustry(industryId)
+  }
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateState(templateId)
+    setShowLanguageSelector(true)
+  }
+
+  const handleLanguageSubmit = (languages: { primary: string, additional: string[] }) => {
+    setTemplate(selectedTemplate!)
+    setStep('voice')
+    // Store languages in deployment store
+    useDeploymentStore.setState(state => ({
+      ...state,
+      languages: {
+        primary: languages.primary,
+        additional: languages.additional
+      }
+    }))
+  }
+
+  const handleCustomSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setSelectedTemplateState('custom')
+    setShowLanguageSelector(true)
+    setTemplate('custom')
+    setIndustry(customConfig.industry)
+  }
+
+  if (showLanguageSelector && selectedTemplate) {
+    return (
+      <LanguageSelector 
+        onSubmit={handleLanguageSubmit}
+        onBack={() => setShowLanguageSelector(false)}
+      />
+    )
   }
 
   return (
@@ -56,58 +150,51 @@ export function TemplateSelector() {
           <motion.button
             key={industry.id}
             className={`glass-panel p-6 text-left relative overflow-hidden group
-                       ${selectedIndustry === industry.id ? 'ring-2 ring-[hsl(var(--purple-main))]' : ''}`}
+                       hover:shadow-lg transition-all duration-300
+                       ${selectedIndustry === industry.id ? 'ring-2 ring-purple-600 shadow-purple-100' : ''}`}
             onClick={() => handleIndustrySelect(industry.id)}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             {industry.popular && (
               <span className="absolute top-3 right-3 text-xs px-2 py-1 rounded-full 
-                             bg-[hsl(var(--purple-main))] text-white">
+                             bg-purple-600 text-white font-medium">
                 Popular
               </span>
             )}
             
-            <div className="mb-4 h-12 w-12 rounded-xl bg-[hsl(var(--purple-ghost))] 
+            <div className="mb-4 h-12 w-12 rounded-xl bg-purple-50 
                           flex items-center justify-center">
-              <Image src={industry.icon} alt={industry.name} width={24} height={24} />
+              {industry.icon}
             </div>
             
-            <h3 className="text-xl font-bold mb-2">{industry.name}</h3>
-            <p className="text-sm text-[hsl(var(--purple-main))]">
+            <h3 className="text-xl font-bold mb-2 text-gray-900">{industry.name}</h3>
+            <p className="text-sm text-gray-600">
               {industry.description}
             </p>
-
-            <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--purple-main)/0.1)] 
-                          to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </motion.button>
         ))}
       </div>
 
-      {/* Template Selection */}
+      {/* Template Selection or Custom Configuration */}
       {selectedIndustry && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-8"
         >
-          <h3 className="heading-3 mb-6">Select a Template</h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            {templates
-              .find(i => i.id === selectedIndustry)
-              ?.templates.map((template) => (
-                <motion.button
-                  key={template.id}
-                  className="glass-panel p-6 text-left hover:ring-2 hover:ring-[hsl(var(--purple-main))]"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleTemplateSelect(template.id)}
-                >
-                  <span className="text-3xl mb-4 block">{template.icon}</span>
-                  <h4 className="text-lg font-bold">{template.name}</h4>
-                </motion.button>
-              ))}
-          </div>
+          {selectedIndustry === 'custom' ? (
+            <CustomTemplateForm
+              config={customConfig}
+              setConfig={setCustomConfig}
+              onSubmit={handleCustomSubmit}
+            />
+          ) : (
+            <PreConfiguredTemplates
+              templates={templates.find(i => i.id === selectedIndustry)?.templates || []}
+              onSelect={handleTemplateSelect}
+            />
+          )}
         </motion.div>
       )}
     </div>
