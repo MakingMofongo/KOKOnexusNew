@@ -102,7 +102,9 @@ async function handleAssistants() {
       type: 'list',
       name: 'choice',
       message: 'What would you like to do with assistants?',
-      choices: Object.values(assistantMenuChoices)
+      choices: Object.values(assistantMenuChoices),
+      pageSize: 10,
+      loop: false
     });
 
     const spinner = ora();
@@ -143,7 +145,8 @@ async function handleAssistants() {
           name: 'id',
           message: 'Select assistant to view:',
           choices,
-          pageSize: 10
+          pageSize: 10,
+          loop: false
         });
 
         spinner.start('Fetching assistant details...');
@@ -219,7 +222,8 @@ async function handleAssistants() {
           name: 'id',
           message: 'Select assistant to update:',
           choices,
-          pageSize: 10
+          pageSize: 10,
+          loop: false
         });
 
         const { name, firstMessage } = await inquirer.prompt([
@@ -268,7 +272,8 @@ async function handleAssistants() {
             name: 'id',
             message: 'Select assistant to delete:',
             choices,
-            pageSize: 10
+            pageSize: 10,
+            loop: false
           },
           {
             type: 'confirm',
@@ -304,7 +309,9 @@ async function handlePhoneNumbers() {
       type: 'list',
       name: 'choice',
       message: 'What would you like to do with phone numbers?',
-      choices: Object.values(phoneNumberMenuChoices)
+      choices: Object.values(phoneNumberMenuChoices),
+      pageSize: 10,
+      loop: false
     });
 
     const spinner = ora();
@@ -348,7 +355,8 @@ async function handlePhoneNumbers() {
           name: 'id',
           message: 'Select phone number to view:',
           choices,
-          pageSize: 10
+          pageSize: 10,
+          loop: false
         });
 
         spinner.start('Fetching phone number details...');
@@ -369,7 +377,9 @@ async function handlePhoneNumbers() {
           type: 'list',
           name: 'provider',
           message: 'Select phone number provider:',
-          choices: ['Twilio', 'Vonage', 'Vapi', 'BYO']
+          choices: ['Twilio', 'Vonage', 'Vapi', 'BYO'],
+          pageSize: 10,
+          loop: false
         });
 
         // Get available assistants for linking
@@ -404,7 +414,9 @@ async function handlePhoneNumbers() {
                   choices: availableNumbers.map(num => ({
                     name: `${num.friendlyName} - ${num.phoneNumber}`,
                     value: num.phoneNumber
-                  }))
+                  })),
+                  pageSize: 10,
+                  loop: false
                 },
                 {
                   type: 'input',
@@ -427,7 +439,9 @@ async function handlePhoneNumbers() {
                   choices: [
                     { name: 'None', value: null },
                     ...assistantChoices
-                  ]
+                  ],
+                  pageSize: 10,
+                  loop: false
                 }
               ]);
 
@@ -479,7 +493,8 @@ async function handlePhoneNumbers() {
             name: 'id',
             message: 'Select phone number to delete:',
             choices,
-            pageSize: 10
+            pageSize: 10,
+            loop: false
           },
           {
             type: 'confirm',
@@ -521,7 +536,8 @@ async function handlePhoneNumbers() {
           name: 'id',
           message: 'Select phone number to update:',
           choices,
-          pageSize: 10
+          pageSize: 10,
+          loop: false
         });
 
         // Get available assistants for linking
@@ -543,7 +559,9 @@ async function handlePhoneNumbers() {
               { name: 'No Change', value: undefined },
               { name: 'None', value: null },
               ...assistantChoices
-            ]
+            ],
+            pageSize: 10,
+            loop: false
           },
           {
             type: 'input',
@@ -584,7 +602,9 @@ async function handleTestFeatures() {
       type: 'list',
       name: 'choice',
       message: 'What would you like to test?',
-      choices: Object.values(testMenuChoices)
+      choices: Object.values(testMenuChoices),
+      pageSize: 10,
+      loop: false
     });
 
     const spinner = ora();
@@ -610,7 +630,9 @@ async function handleTestFeatures() {
               { name: 'Low (< 100 calls/day)', value: 100 },
               { name: 'Medium (100-1000 calls/day)', value: 500 },
               { name: 'High (> 1000 calls/day)', value: 1500 }
-            ]
+            ],
+            pageSize: 10,
+            loop: false
           },
           {
             type: 'checkbox',
@@ -621,7 +643,9 @@ async function handleTestFeatures() {
               { name: 'Spanish', value: 'es' },
               { name: 'French', value: 'fr' }
             ],
-            validate: (answer) => answer.length > 0 || 'Select at least one language'
+            validate: (answer) => answer.length > 0 || 'Select at least one language',
+            pageSize: 10,
+            loop: false
           }
         ]);
 
@@ -680,7 +704,9 @@ async function handleTestFeatures() {
           type: 'list',
           name: 'deploymentId',
           message: 'Select deployment to analyze:',
-          choices: deployments
+          choices: deployments,
+          pageSize: 10,
+          loop: false
         });
 
         spinner.start('Analyzing deployment...');
@@ -726,7 +752,9 @@ async function handleFiles() {
       type: 'list',
       name: 'choice',
       message: 'What would you like to do with files?',
-      choices: Object.values(fileMenuChoices)
+      choices: Object.values(fileMenuChoices),
+      pageSize: 10,
+      loop: false
     });
 
     const spinner = ora();
@@ -816,7 +844,9 @@ async function handleFiles() {
           choices: result.data.map((file: File) => ({
             name: `${file.name || file.originalName || 'Unnamed'} (${file.id})`,
             value: file.id
-          }))
+          })),
+          pageSize: 10,
+          loop: false
         });
 
         spinner.start('Fetching file details...');
@@ -850,7 +880,9 @@ async function handleFiles() {
             choices: result.data.map((file: File) => ({
               name: `${file.name || file.originalName || 'Unnamed'} (${file.id})`,
               value: file.id
-            }))
+            })),
+            pageSize: 10,
+            loop: false
           },
           {
             type: 'confirm',
@@ -894,7 +926,9 @@ async function handleFiles() {
           choices: result.data.map((file: File) => ({
             name: `${file.name || file.originalName || 'Unnamed'} (${file.id})`,
             value: file.id
-          }))
+          })),
+          pageSize: 10,
+          loop: false
         });
 
         const { name } = await inquirer.prompt([
@@ -934,7 +968,9 @@ export async function showMainMenu() {
       type: 'list',
       name: 'choice',
       message: 'What would you like to do?',
-      choices: Object.values(mainMenuChoices)
+      choices: Object.values(mainMenuChoices),
+      pageSize: 10,
+      loop: false
     });
 
     switch (choice) {
