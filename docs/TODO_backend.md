@@ -26,7 +26,7 @@
 - [x] GET Get Phone Number
 - [x] DEL Delete Phone Number
 - [x] PATCH Update Phone Number
-- [ ] TWILIO Get available numbers (Ayoub)
+- [x] TWILIO Get available numbers (Ayoub)
 
 ### Squads
 - [ ] GET List Squads
