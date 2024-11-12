@@ -12,6 +12,7 @@ import { FileService } from '../services/fileService';
 import * as fs from 'fs';
 import * as path from 'path';
 import { File } from '../types/file';
+import twilio from 'twilio';
 
 const assistantService = new AssistantService(VAPI_TOKEN);
 const phoneNumberService = new PhoneNumberService(VAPI_TOKEN);
@@ -45,7 +46,7 @@ const assistantMenuChoices = {
 
 const phoneNumberMenuChoices = {
   LIST: 'List Phone Numbers',
-  CREATE: 'Create Phone Number',
+  PURCHASE: 'Purchase Phone Number',
   GET: 'Get Phone Number Details',
   UPDATE: 'Update Phone Number',
   DELETE: 'Delete Phone Number',
@@ -363,7 +364,7 @@ async function handlePhoneNumbers() {
         break;
       }
 
-      case phoneNumberMenuChoices.CREATE: {
+      case phoneNumberMenuChoices.PURCHASE: {
         const { provider } = await inquirer.prompt({
           type: 'list',
           name: 'provider',
@@ -379,54 +380,81 @@ async function handlePhoneNumbers() {
         let config;
         switch (provider.toLowerCase()) {
           case 'twilio': {
-            const { number, accountSid, authToken, assistantId } = await inquirer.prompt([
-              {
-                type: 'input',
-                name: 'number',
-                message: 'Enter phone number:',
-                validate: (input) => input.length > 0
-              },
-              {
-                type: 'input',
-                name: 'accountSid',
-                message: 'Enter Twilio Account SID:',
-                validate: (input) => input.length > 0
-              },
-              {
-                type: 'input',
-                name: 'authToken',
-                message: 'Enter Twilio Auth Token:',
-                validate: (input) => input.length > 0
-              },
-              {
-                type: 'list',
-                name: 'assistantId',
-                message: 'Select assistant to link (optional):',
-                choices: [
-                  { name: 'None', value: null },
-                  ...assistantChoices
-                ]
+            // First fetch available numbers
+            spinner.start('Fetching available Twilio numbers...');
+            const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+            
+            try {
+              const availableNumbers = await twilioClient.availablePhoneNumbers('US')
+                .local
+                .list({ limit: 20 });
+              spinner.stop();
+
+              if (availableNumbers.length === 0) {
+                console.log(chalk.yellow('No numbers available in this region'));
+                break;
               }
-            ]);
-            config = {
-              ...defaultTwilioConfig,
-              number,
-              twilioAccountSid: accountSid,
-              twilioAuthToken: authToken,
-              assistantId: assistantId || undefined
-            };
+
+              // Let user select from available numbers
+              const { selectedNumber, accountSid, authToken, assistantId } = await inquirer.prompt([
+                {
+                  type: 'list',
+                  name: 'selectedNumber',
+                  message: 'Select a phone number to purchase:',
+                  choices: availableNumbers.map(num => ({
+                    name: `${num.friendlyName} - ${num.phoneNumber}`,
+                    value: num.phoneNumber
+                  }))
+                },
+                {
+                  type: 'input',
+                  name: 'accountSid',
+                  message: 'Enter Twilio Account SID:',
+                  default: process.env.TWILIO_ACCOUNT_SID,
+                  validate: (input) => input.length > 0
+                },
+                {
+                  type: 'input',
+                  name: 'authToken',
+                  message: 'Enter Twilio Auth Token:',
+                  default: process.env.TWILIO_AUTH_TOKEN,
+                  validate: (input) => input.length > 0
+                },
+                {
+                  type: 'list',
+                  name: 'assistantId',
+                  message: 'Select assistant to link (optional):',
+                  choices: [
+                    { name: 'None', value: null },
+                    ...assistantChoices
+                  ]
+                }
+              ]);
+
+              config = {
+                ...defaultTwilioConfig,
+                number: selectedNumber,
+                twilioAccountSid: accountSid,
+                twilioAuthToken: authToken,
+                assistantId: assistantId || undefined
+              };
+            } catch (error) {
+              spinner.stop();
+              console.log(chalk.red('Error fetching Twilio numbers:', error instanceof Error ? error.message : error));
+              break;
+            }
             break;
           }
           // Add other provider configurations...
         }
 
         if (config) {
-          spinner.start('Creating phone number...');
+          spinner.start('Purchasing phone number...');
           const result = await phoneNumberService.createPhoneNumber(config);
           spinner.stop();
 
           if (result.success) {
-            console.log(chalk.green('\nPhone number created successfully!'));
+            console.log(chalk.green('\nPhone number purchased successfully!'));
             console.log(chalk.cyan('ID:', result.data?.id));
           } else {
             console.log(chalk.red('Error:', result.error));
