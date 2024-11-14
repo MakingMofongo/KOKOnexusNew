@@ -42,28 +42,54 @@
 - [ ] Set up protected routes
 - [ ] Add OAuth providers integration
 
-### Dashboard
-- [ ] Create dashboard layout
-- [ ] Build assistant management interface
-- [ ] Implement analytics overview
-- [ ] Add cost tracking components
-- [ ] Create performance metrics display
-- [ ] Build deployment history view
+## Frontend Development Priority
 
-### Analytics Dashboard
-- [ ] Create real-time monitoring components
-- [ ] Build historical analysis charts
-- [ ] Implement cost breakdown visualization
-- [ ] Add optimization suggestions panel
-- [ ] Create export functionality
+### Landing Page (Priority: High)
 
-### API Integration
+- [ ] Migrate Existing Landing page from old site
+- [ ] Link deployment page, dashboard etc
+- [ ] Test entire flow for all pages
+
+
+### API Integration for Deployment interface
 - [ ] Complete assistant API integration
 - [ ] Implement phone number API
 - [ ] Add deployment API endpoints
 - [ ] Set up real-time updates
 - [ ] Add error handling middleware
 - [ ] Implement retry logic
+
+### Deployment Interface (Priority: Highest)
+- [ ] One-Page Deployment Flow
+- [ ]Integrate with backend API and test
+  - [ ] Industry Selection
+    - [ ] Pre-configured templates
+    - [ ] Custom configuration
+  - [ ] Language Configuration
+    - [ ] Primary language selection
+    - [ ] Additional languages
+    - [ ] Auto-detection settings
+  - [ ] Voice Selection
+    - [ ] Per-language voice options
+    - [ ] Voice customization
+  - [ ] Phone Number Setup
+    - [ ] Region selection
+    - [ ] Provider selection
+    - [ ] Number assignment
+
+### Analytics Dashboard (Priority: High)
+- [ ] Real-Time Monitoring
+  - [ ] Active calls
+  - [ ] Language distribution
+  - [ ] Response times
+  - [ ] Switch latency
+- [ ] Historical Analysis
+  - [ ] Language usage patterns
+  - [ ] Peak hours by language
+  - [ ] Cost per language
+  - [ ] Quality metrics
+
+
 
 ### Testing
 - [ ] Set up Jest configuration
