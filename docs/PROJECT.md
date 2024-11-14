@@ -107,6 +107,15 @@ type CreatePhoneNumberConfig =
   | VapiPhoneNumberConfig;
 ```
 
+### Transcriber Configuration
+The system now supports multiple transcription providers:
+- Custom Transcriber: For self-hosted transcription services
+- Deepgram: Advanced transcription with code switching support
+- Gladia: Multi-language transcription with prosody detection
+- Talkscriber: Simple Whisper-based transcription
+
+Each provider has specific configuration options that can be set through the CLI or programmatically.
+
 ## Configuration System
 
 ### Assistant Configuration

@@ -1,4 +1,4 @@
-import { VapiClient } from "@vapi-ai/server-sdk";
+import { VapiClient, Vapi } from "@vapi-ai/server-sdk";
 import { 
   Assistant, 
   AssistantResponse, 
@@ -6,7 +6,7 @@ import {
   ListAssistantsOptions,
   DeleteAssistantResponse,
   UpdateAssistantResponse,
-  UpdateAssistantPayload
+  UpdateAssistantDto
 } from "../types/assistant";
 
 export class AssistantService {
@@ -76,12 +76,17 @@ export class AssistantService {
     }
   }
 
-  async updateAssistant(id: string, updates: UpdateAssistantPayload): Promise<UpdateAssistantResponse> {
+  async updateAssistant(id: string, updates: UpdateAssistantDto): Promise<UpdateAssistantResponse> {
     try {
-      const updatedAssistant = await this.client.assistants.update(id, updates);
+      const sdkUpdates: Vapi.UpdateAssistantDto = {
+        ...updates,
+        transcriber: updates.transcriber as Vapi.UpdateAssistantDtoTranscriber
+      };
+
+      const assistant = await this.client.assistants.update(id, sdkUpdates);
       return {
         success: true,
-        data: updatedAssistant as Assistant
+        data: assistant as Assistant
       };
     } catch (error) {
       return {

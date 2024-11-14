@@ -12,6 +12,8 @@ import { FileService } from '../services/fileService';
 import * as fs from 'fs';
 import * as path from 'path';
 import { File } from '../types/file';
+import { TranscriberConfig } from '../types/assistant';
+import { GladiaLanguage, GladiaLanguageBehaviour, GladiaTranscriberConfig } from '../types/assistant';
 import twilio from 'twilio';
 
 const assistantService = new AssistantService(VAPI_TOKEN);
@@ -94,6 +96,138 @@ async function getPhoneNumberChoices() {
     value: number.id,
     short: number.name || number.id
   }));
+}
+
+// Add helper function to chunk array for better display
+function chunkArray<T>(array: T[], size: number): T[][] {
+  return Array.from({ length: Math.ceil(array.length / size) }, (_, i) =>
+    array.slice(i * size, i * size + size)
+  );
+}
+
+// Add Gladia-specific configuration function
+async function configureGladiaTranscriber(): Promise<GladiaTranscriberConfig> {
+  const languageChoices = Object.entries(GladiaLanguage).map(([key, value]) => ({
+    name: `${key} (${value})`,
+    value: value
+  }));
+
+  // Split language choices into columns for better display
+  const columnWidth = 3;
+  const languageColumns = chunkArray(languageChoices, Math.ceil(languageChoices.length / columnWidth))
+    .map(column => column.map(choice => choice.name).join('  '))
+    .join('\n');
+
+  const gladiaConfig = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'audioEnhancer',
+      message: 'Enable audio enhancement? (May increase latency)',
+      default: false
+    },
+    {
+      type: 'list',
+      name: 'languageBehaviour',
+      message: 'Select language behavior:',
+      choices: [
+        { 
+          name: 'Manual (You specify the language)', 
+          value: 'manual' 
+        },
+        { 
+          name: 'Automatic Single Language (Auto-detect one language)', 
+          value: 'automatic single language' 
+        },
+        { 
+          name: 'Automatic Multiple Languages (Auto-detect language switches)', 
+          value: 'automatic multiple languages' 
+        }
+      ]
+    },
+    {
+      type: 'list',
+      name: 'language',
+      message: 'Select language:\n' + languageColumns,
+      choices: languageChoices,
+      when: (answers) => answers.languageBehaviour === 'manual',
+      pageSize: 20
+    },
+    {
+      type: 'list',
+      name: 'model',
+      message: 'Select transcription model:',
+      choices: [
+        { 
+          name: 'Fast (Lower accuracy, lower latency)', 
+          value: 'fast' 
+        },
+        { 
+          name: 'Accurate (Higher accuracy, higher latency)', 
+          value: 'accurate' 
+        }
+      ]
+    },
+    {
+      type: 'confirm',
+      name: 'prosody',
+      message: 'Enable prosody detection? (laugh, giggles, music, etc.)',
+      default: false
+    },
+    {
+      type: 'input',
+      name: 'transcriptionHint',
+      message: 'Enter transcription hints (custom vocabulary, max 600 chars):',
+      validate: (input: string) => {
+        if (input.length > 600) {
+          return 'Hint must be 600 characters or less';
+        }
+        return true;
+      }
+    }
+  ]);
+
+  // Build the configuration object
+  const config: GladiaTranscriberConfig = {
+    provider: 'gladia',
+    audioEnhancer: gladiaConfig.audioEnhancer,
+    languageBehaviour: gladiaConfig.languageBehaviour,
+    model: gladiaConfig.model,
+    prosody: gladiaConfig.prosody
+  };
+
+  // Add optional fields only if they have values
+  if (gladiaConfig.language) {
+    config.language = gladiaConfig.language;
+  }
+
+  if (gladiaConfig.transcriptionHint?.trim()) {
+    config.transcriptionHint = gladiaConfig.transcriptionHint.trim();
+  }
+
+  return config;
+}
+
+// Update the existing configureTranscriber function
+async function configureTranscriber() {
+  const { provider } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'provider',
+      message: 'Select transcriber provider:',
+      choices: [
+        { name: 'Gladia (Advanced multi-language support)', value: 'gladia' },
+        { name: 'Deepgram', value: 'deepgram' },
+        { name: 'Custom Transcriber', value: 'custom-transcriber' },
+        { name: 'Talkscriber', value: 'talkscriber' }
+      ]
+    }
+  ]);
+
+  switch (provider) {
+    case 'gladia':
+      return configureGladiaTranscriber();
+    // ... other cases remain the same
+  }
 }
 
 async function handleAssistants() {
@@ -242,6 +376,19 @@ async function handleAssistants() {
         const updates: any = {};
         if (name) updates.name = name;
         if (firstMessage) updates.firstMessage = firstMessage;
+
+        const transcriberUpdate = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'updateTranscriber',
+            message: 'Would you like to update the transcriber configuration?',
+            default: false
+          }
+        ]);
+
+        if (transcriberUpdate.updateTranscriber) {
+          updates.transcriber = await configureTranscriber();
+        }
 
         spinner.start('Updating assistant...');
         const result = await assistantService.updateAssistant(id, updates);
