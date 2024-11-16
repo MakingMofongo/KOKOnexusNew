@@ -70,6 +70,7 @@ export interface TwilioPhoneNumberConfig extends BasePhoneNumberConfig {
   number: string;
   twilioAccountSid: string;
   twilioAuthToken: string;
+  twilioPhoneNumberSid?: string;
 }
 
 export interface VonagePhoneNumberConfig extends BasePhoneNumberConfig {

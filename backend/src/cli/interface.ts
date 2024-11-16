@@ -7,7 +7,7 @@ import { PhoneNumberService } from '../services/phoneNumberService';
 import { VAPI_TOKEN } from '../config';
 import { defaultByoConfig, defaultTwilioConfig, defaultVonageConfig, defaultVapiConfig } from '../config/phoneNumberConfig';
 import { BusinessDeploymentService } from '../services/businessDeploymentService';
-import { UpdatePhoneNumberDto } from '../types/phoneNumber';
+import { UpdatePhoneNumberDto, TwilioPhoneNumberConfig } from '../types/phoneNumber';
 import { FileService } from '../services/fileService';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -520,107 +520,7 @@ async function handlePhoneNumbers() {
       }
 
       case phoneNumberMenuChoices.PURCHASE: {
-        const { provider } = await inquirer.prompt({
-          type: 'list',
-          name: 'provider',
-          message: 'Select phone number provider:',
-          choices: ['Twilio', 'Vonage', 'Vapi', 'BYO'],
-          pageSize: 10,
-          loop: false
-        });
-
-        // Get available assistants for linking
-        spinner.start('Fetching available assistants...');
-        const assistantChoices = await getAssistantChoices();
-        spinner.stop();
-
-        let config;
-        switch (provider.toLowerCase()) {
-          case 'twilio': {
-            // First fetch available numbers
-            spinner.start('Fetching available Twilio numbers...');
-            const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-            
-            try {
-              const availableNumbers = await twilioClient.availablePhoneNumbers('US')
-                .local
-                .list({ limit: 20 });
-              spinner.stop();
-
-              if (availableNumbers.length === 0) {
-                console.log(chalk.yellow('No numbers available in this region'));
-                break;
-              }
-
-              // Let user select from available numbers
-              const { selectedNumber, accountSid, authToken, assistantId } = await inquirer.prompt([
-                {
-                  type: 'list',
-                  name: 'selectedNumber',
-                  message: 'Select a phone number to purchase:',
-                  choices: availableNumbers.map(num => ({
-                    name: `${num.friendlyName} - ${num.phoneNumber}`,
-                    value: num.phoneNumber
-                  })),
-                  pageSize: 10,
-                  loop: false
-                },
-                {
-                  type: 'input',
-                  name: 'accountSid',
-                  message: 'Enter Twilio Account SID:',
-                  default: process.env.TWILIO_ACCOUNT_SID,
-                  validate: (input) => input.length > 0
-                },
-                {
-                  type: 'input',
-                  name: 'authToken',
-                  message: 'Enter Twilio Auth Token:',
-                  default: process.env.TWILIO_AUTH_TOKEN,
-                  validate: (input) => input.length > 0
-                },
-                {
-                  type: 'list',
-                  name: 'assistantId',
-                  message: 'Select assistant to link (optional):',
-                  choices: [
-                    { name: 'None', value: null },
-                    ...assistantChoices
-                  ],
-                  pageSize: 10,
-                  loop: false
-                }
-              ]);
-
-              config = {
-                ...defaultTwilioConfig,
-                number: selectedNumber,
-                twilioAccountSid: accountSid,
-                twilioAuthToken: authToken,
-                assistantId: assistantId || undefined
-              };
-            } catch (error) {
-              spinner.stop();
-              console.log(chalk.red('Error fetching Twilio numbers:', error instanceof Error ? error.message : error));
-              break;
-            }
-            break;
-          }
-          // Add other provider configurations...
-        }
-
-        if (config) {
-          spinner.start('Purchasing phone number...');
-          const result = await phoneNumberService.createPhoneNumber(config);
-          spinner.stop();
-
-          if (result.success) {
-            console.log(chalk.green('\nPhone number purchased successfully!'));
-            console.log(chalk.cyan('ID:', result.data?.id));
-          } else {
-            console.log(chalk.red('Error:', result.error));
-          }
-        }
+        await handlePhoneNumberPurchase();
         break;
       }
 
@@ -1104,6 +1004,216 @@ async function handleFiles() {
         break;
       }
     }
+  }
+}
+
+async function handlePhoneNumberPurchase() {
+  const spinner = ora();
+  
+  try {
+    // Add warning about costs
+    console.log(chalk.yellow('\n⚠️  WARNING: Phone number purchases will incur real charges on your Twilio account'));
+    console.log(chalk.yellow('Typical costs:'));
+    console.log(chalk.yellow('- Local numbers: ~$1.00/month'));
+    console.log(chalk.yellow('- Toll-free numbers: ~$2.00/month'));
+    console.log(chalk.yellow('- Additional per-minute charges will apply for calls\n'));
+
+    const { proceed } = await inquirer.prompt({
+      type: 'confirm',
+      name: 'proceed',
+      message: 'Do you understand that this will charge your Twilio account and wish to proceed?',
+      default: false
+    });
+
+    if (!proceed) {
+      console.log(chalk.yellow('Operation cancelled'));
+      return;
+    }
+
+    // Step 1: Select country
+    const { country } = await inquirer.prompt({
+      type: 'list',
+      name: 'country',
+      message: 'Select country:',
+      choices: [
+        { name: 'United States', value: 'US' },
+        { name: 'Canada', value: 'CA' },
+        { name: 'United Kingdom', value: 'GB' }
+        // Add more countries as needed
+      ]
+    });
+
+    // Step 2: Select number type
+    const { numberType } = await inquirer.prompt({
+      type: 'list',
+      name: 'numberType',
+      message: 'Select number type:',
+      choices: [
+        { name: 'Local', value: 'local' },
+        { name: 'Toll Free', value: 'tollfree' },
+        { name: 'Mobile', value: 'mobile' }
+      ]
+    });
+
+    // Step 3: Optional filters
+    const { useFilters } = await inquirer.prompt({
+      type: 'confirm',
+      name: 'useFilters',
+      message: 'Would you like to apply search filters?',
+      default: false
+    });
+
+    let searchParams: any = { country, type: numberType };
+
+    if (useFilters) {
+      const filters = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'areaCode',
+          message: 'Enter area code (optional):',
+          validate: (input) => !input || /^\d{3}$/.test(input) || 'Area code must be 3 digits'
+        },
+        {
+          type: 'input',
+          name: 'contains',
+          message: 'Enter number pattern (optional):',
+          validate: (input) => !input || /^[\d*]+$/.test(input) || 'Invalid pattern'
+        }
+      ]);
+
+      if (filters.areaCode) searchParams.areaCode = filters.areaCode;
+      if (filters.contains) searchParams.contains = filters.contains;
+    }
+
+    // Step 4: Fetch available numbers
+    spinner.start('Searching for available numbers...');
+    const result = await phoneNumberService.listAvailableNumbers(searchParams);
+    spinner.stop();
+
+    if (!result.success || !result.data?.length) {
+      console.log(chalk.yellow('No numbers found matching your criteria'));
+      return;
+    }
+
+    // Step 5: Display and select number
+    const { selectedNumber } = await inquirer.prompt({
+      type: 'list',
+      name: 'selectedNumber',
+      message: 'Select a number to purchase:',
+      choices: result.data.map(num => ({
+        name: `${num.friendlyName} - ${num.region}`,
+        value: num.phoneNumber
+      })),
+      pageSize: 10
+    });
+
+    // Step 6: Link to assistant (optional)
+    spinner.start('Fetching available assistants...');
+    const assistantChoices = await getAssistantChoices();
+    spinner.stop();
+
+    const { assistantId } = await inquirer.prompt({
+      type: 'list',
+      name: 'assistantId',
+      message: 'Select assistant to link (optional):',
+      choices: [
+        { name: 'None', value: null },
+        ...assistantChoices
+      ]
+    });
+
+    // Fetch actual pricing for the selected country
+    spinner.start('Fetching pricing information...');
+    const pricingResult = await phoneNumberService.getPhoneNumberPricing(country);
+    spinner.stop();
+
+    if (!pricingResult.success) {
+      console.log(chalk.red('Error fetching pricing:', pricingResult.error));
+      return;
+    }
+
+    // Display detailed pricing information
+    console.log(chalk.yellow('\n📞 Phone Number Pricing Information'));
+    console.log(chalk.yellow('────────────────────────────────'));
+    pricingResult.data?.prices.forEach(price => {
+      console.log(chalk.cyan(`${price.numberType}: ${pricingResult.data?.priceUnit} ${price.currentPrice}/month`));
+    });
+    console.log(chalk.yellow('\n⚠️  IMPORTANT: Additional charges'));
+    console.log(chalk.yellow('- Voice calls: Varies by destination'));
+    console.log(chalk.yellow('- SMS messages: Varies by destination'));
+    console.log(chalk.yellow('- Additional features may incur extra costs\n'));
+
+    // Get the specific price for the selected number type
+    const normalizedSearchType = numberType.toLowerCase().trim();
+    const selectedPrice = pricingResult.data?.prices.find(p => {
+      const isExactMatch = p.numberType === normalizedSearchType;
+      const isTollFreeMatch = (normalizedSearchType === 'tollfree' && p.numberType === 'toll free') ||
+                             (normalizedSearchType === 'toll free' && p.numberType === 'tollfree');
+      const isLocalMatch = p.numberType === 'local' && normalizedSearchType === 'local';
+      
+      return isExactMatch || isTollFreeMatch || isLocalMatch;
+    });
+
+    if (!selectedPrice) {
+      console.log(chalk.red('\nError: Could not determine pricing for selected number type'));
+      console.log(chalk.yellow('Available price types:'));
+      pricingResult.data?.prices.forEach(price => {
+        console.log(chalk.yellow(`  • ${price.numberType}: ${pricingResult.data?.priceUnit} ${price.currentPrice}/month`));
+      });
+      return;
+    }
+
+    // Display the matched price information
+    console.log(chalk.green('\nFound matching price:'));
+    console.log(chalk.green(`- Type: ${selectedPrice.numberType}`));
+    console.log(chalk.green(`- Price: ${pricingResult.data?.priceUnit} ${selectedPrice.currentPrice}/month`));
+
+    // Require explicit confirmation with price acknowledgment
+    const { confirmPrice } = await inquirer.prompt({
+      type: 'input',
+      name: 'confirmPrice',
+      message: `Type the monthly price (${selectedPrice.currentPrice}) to confirm:`,
+      validate: (input) => {
+        return input === selectedPrice.currentPrice || 
+          'Please enter the exact price shown to confirm';
+      }
+    });
+
+    const { confirmPurchase } = await inquirer.prompt({
+      type: 'input',
+      name: 'confirmPurchase',
+      message: 'Type "PURCHASE" to confirm you want to buy this number:',
+      validate: (input) => {
+        return input === 'PURCHASE' || 
+          'Please type PURCHASE (all caps) to confirm';
+      }
+    });
+
+    // Proceed with purchase...
+    spinner.start('Purchasing phone number...');
+    const purchaseResult = await phoneNumberService.createPhoneNumber({
+      provider: 'twilio',
+      number: selectedNumber,
+      twilioAccountSid: process.env.TWILIO_ACCOUNT_SID!,
+      twilioAuthToken: process.env.TWILIO_AUTH_TOKEN!,
+      assistantId: assistantId || undefined
+    } as TwilioPhoneNumberConfig);
+    spinner.stop();
+
+    if (purchaseResult.success) {
+      console.log(chalk.green('\nPhone number purchased successfully!'));
+      console.log(chalk.cyan('ID:', purchaseResult.data?.id));
+      console.log(chalk.yellow('\nMonthly Costs:'));
+      console.log(chalk.yellow(`- Number rental: ${pricingResult.data?.priceUnit} ${selectedPrice.currentPrice}`));
+      console.log(chalk.yellow('- Usage charges will appear in your Twilio console'));
+      console.log(chalk.yellow('\nManage this number at: https://www.twilio.com/console/phone-numbers'));
+    } else {
+      console.log(chalk.red('Error:', purchaseResult.error));
+    }
+
+  } catch (error) {
+    spinner.stop();
+    console.log(chalk.red('Error:', error instanceof Error ? error.message : error));
   }
 }
 
