@@ -15,6 +15,7 @@ import { File } from '../types/file';
 import { TranscriberConfig } from '../types/assistant';
 import { GladiaLanguage, GladiaLanguageBehaviour, GladiaTranscriberConfig } from '../types/assistant';
 import twilio from 'twilio';
+import { VapiVoiceProvider, VapiVoiceConfig } from '../types/assistant';
 
 const assistantService = new AssistantService(VAPI_TOKEN);
 const phoneNumberService = new PhoneNumberService(VAPI_TOKEN);
@@ -297,7 +298,8 @@ async function handleAssistants() {
       }
 
       case assistantMenuChoices.CREATE: {
-        const { name, firstMessage } = await inquirer.prompt([
+        // First ask for name and first message
+        const { name, firstMessage, modelProvider } = await inquirer.prompt([
           {
             type: 'input',
             name: 'name',
@@ -309,6 +311,68 @@ async function handleAssistants() {
             name: 'firstMessage',
             message: 'Enter first message:',
             default: 'Hello! How can I help you today?'
+          },
+          {
+            type: 'list',
+            name: 'modelProvider',
+            message: 'Select model provider:',
+            choices: [
+              { name: 'Groq', value: 'groq' },
+              { name: 'Vapi (GPT-4)', value: 'vapi' },
+              { name: 'OpenAI', value: 'openai' },
+              { name: 'Anthropic', value: 'anthropic' },
+              { name: 'Google', value: 'google' }
+            ]
+          }
+        ]);
+
+        // Get model configuration immediately after provider selection
+        const modelConfig = await configureModel(modelProvider);
+
+        // Then ask for voice provider
+        const { voiceProvider } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'voiceProvider',
+            message: 'Select voice provider:',
+            choices: [
+              { name: 'Eleven Labs', value: '11labs' },
+              { name: 'Azure', value: 'azure' },
+              { name: 'OpenAI', value: 'openai' },
+              { name: 'PlayHT', value: 'playht' }
+            ]
+          }
+        ]);
+
+        // Get voice configuration
+        const voiceConfig = await configureVoice(voiceProvider);
+
+        // Rest of the configuration...
+        const transcriber = await configureTranscriber();
+
+        const { silenceTimeout, maxDuration, backgroundSound } = await inquirer.prompt([
+          {
+            type: 'number',
+            name: 'silenceTimeout',
+            message: 'Enter silence timeout in seconds (10-600):',
+            default: 30,
+            validate: (value) => value >= 10 && value <= 600
+          },
+          {
+            type: 'number',
+            name: 'maxDuration',
+            message: 'Enter maximum call duration in seconds (10-43200):',
+            default: 600,
+            validate: (value) => value >= 10 && value <= 43200
+          },
+          {
+            type: 'list',
+            name: 'backgroundSound',
+            message: 'Select background sound:',
+            choices: [
+              { name: 'Off', value: 'off' },
+              { name: 'Office', value: 'office' }
+            ]
           }
         ]);
 
@@ -316,19 +380,14 @@ async function handleAssistants() {
         const result = await assistantService.createAssistant({
           name,
           firstMessage,
-          model: {
-            provider: "vapi",
-            model: "gpt-4",
-            temperature: 0.7,
-            maxTokens: 150,
-            emotionRecognitionEnabled: true,
-            messages: [
-              {
-                role: "assistant",
-                content: "You are a helpful customer service assistant."
-              }
-            ]
-          }
+          model: modelConfig,
+          voice: voiceConfig,
+          transcriber,
+          silenceTimeoutSeconds: silenceTimeout,
+          maxDurationSeconds: maxDuration,
+          backgroundSound,
+          hipaaEnabled: false,
+          backgroundDenoisingEnabled: false
         });
         spinner.stop();
 
@@ -1215,6 +1274,185 @@ async function handlePhoneNumberPurchase() {
     spinner.stop();
     console.log(chalk.red('Error:', error instanceof Error ? error.message : error));
   }
+}
+
+// Update the elevenLabsVoices enum with the exact IDs that Vapi expects
+const elevenLabsVoices = {
+  RACHEL: '21m00Tcm4TlvDq8ikWAM',  // Rachel
+  DOMI: 'AZnzlk1XvdvUeBnXmlld',    // Domi
+  BELLA: 'EXAVITQu4vr4xnSDxMaL',   // Bella
+  ANTONI: 'ErXwobaYiN019PkySvjV',   // Antoni
+  ELLI: 'MF3mGyEYCl7XYWbV9V6O',    // Elli
+  JOSH: 'TxGEqnHWrfWFTfGW9XjX',    // Josh
+  ARNOLD: 'VR6AewLTigWG4xSOukaG',   // Arnold
+  ADAM: 'pNInz6obpgDQGcFmaJgB',    // Adam
+  SAM: 'yoZ06aMxZJJ28mfd3POQ',     // Sam
+  NICOLE: 'piTKgcLEGmPE4e6mEKli',   // Nicole
+  GLINDA: 'z9fAnlkpzviPz146aGWa'    // Glinda
+} as const;
+
+// Update the configureVoice function with the same choices but using the correct IDs
+async function configureVoice(provider: VapiVoiceProvider): Promise<VapiVoiceConfig> {
+  const voiceConfig: VapiVoiceConfig = {
+    provider,
+    voiceId: ''
+  };
+
+  if (provider === '11labs') {
+    const { voiceId, stability, similarityBoost } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'voiceId',
+        message: 'Select voice:',
+        choices: [
+          { name: 'Rachel (Female, Conversational)', value: elevenLabsVoices.RACHEL },
+          { name: 'Domi (Female, Strong)', value: elevenLabsVoices.DOMI },
+          { name: 'Bella (Female, Soft)', value: elevenLabsVoices.BELLA },
+          { name: 'Antoni (Male, Well-Rounded)', value: elevenLabsVoices.ANTONI },
+          { name: 'Elli (Female, Young)', value: elevenLabsVoices.ELLI },
+          { name: 'Josh (Male, Young)', value: elevenLabsVoices.JOSH },
+          { name: 'Arnold (Male, Strong)', value: elevenLabsVoices.ARNOLD },
+          { name: 'Adam (Male, Deep)', value: elevenLabsVoices.ADAM },
+          { name: 'Sam (Male, Raspy)', value: elevenLabsVoices.SAM },
+          { name: 'Nicole (Female, Professional)', value: elevenLabsVoices.NICOLE },
+          { name: 'Glinda (Female, Warm)', value: elevenLabsVoices.GLINDA }
+        ]
+      },
+      {
+        type: 'number',
+        name: 'stability',
+        message: 'Enter stability (0-1):',
+        default: 0.5,
+        validate: (value) => value >= 0 && value <= 1
+      },
+      {
+        type: 'number',
+        name: 'similarityBoost',
+        message: 'Enter similarity boost (0-1):',
+        default: 0.75,
+        validate: (value) => value >= 0 && value <= 1
+      }
+    ]);
+
+    voiceConfig.voiceId = voiceId;
+    voiceConfig.stability = stability;
+    voiceConfig.similarityBoost = similarityBoost;
+  }
+
+  // Configure chunk plan
+  const { useChunkPlan } = await inquirer.prompt({
+    type: 'confirm',
+    name: 'useChunkPlan',
+    message: 'Would you like to configure chunking?',
+    default: false
+  });
+
+  if (useChunkPlan) {
+    const { minCharacters, formatEnabled } = await inquirer.prompt([
+      {
+        type: 'number',
+        name: 'minCharacters',
+        message: 'Enter minimum characters per chunk:',
+        default: 30,
+        validate: (value) => value >= 1 && value <= 80
+      },
+      {
+        type: 'confirm',
+        name: 'formatEnabled',
+        message: 'Enable text formatting?',
+        default: true
+      }
+    ]);
+
+    voiceConfig.chunkPlan = {
+      enabled: true,
+      minCharacters,
+      formatPlan: {
+        enabled: formatEnabled
+      }
+    };
+  }
+
+  return voiceConfig;
+}
+
+// Add a function to configure model settings based on provider
+async function configureModel(provider: string) {
+  const baseConfig = {
+    provider,
+    temperature: 0.7,
+    maxTokens: 150,
+    emotionRecognitionEnabled: true,
+    messages: [
+      {
+        role: "system",
+        content: "You are a helpful customer service assistant."
+      }
+    ]
+  };
+
+  if (provider === 'groq') {
+    const { model } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'model',
+        message: 'Select Groq model:',
+        choices: [
+          { 
+            name: 'LLaMA 3.1 405B (Reasoning)',
+            value: 'llama-3.1-405b-reasoning'
+          },
+          { 
+            name: 'LLaMA 3.1 70B (Versatile)',
+            value: 'llama-3.1-70b-versatile'
+          },
+          { 
+            name: 'LLaMA 3.1 8B (Instant)',
+            value: 'llama-3.1-8b-instant'
+          },
+          { 
+            name: 'Mixtral 8x7B',
+            value: 'mixtral-8x7b-32768'
+          },
+          { 
+            name: 'LLaMA3 8B',
+            value: 'llama3-8b-8192'
+          },
+          { 
+            name: 'LLaMA3 70B',
+            value: 'llama3-70b-8192'
+          },
+          { 
+            name: 'LLaMA3 8B (Tool Use Preview)',
+            value: 'llama3-groq-8b-8192-tool-use-preview'
+          },
+          { 
+            name: 'LLaMA3 70B (Tool Use Preview)',
+            value: 'llama3-groq-70b-8192-tool-use-preview'
+          },
+          { 
+            name: 'Gemma 7B',
+            value: 'gemma-7b-it'
+          },
+          { 
+            name: 'Gemma2 9B',
+            value: 'gemma2-9b-it'
+          }
+        ]
+      }
+    ]);
+
+    return {
+      ...baseConfig,
+      model
+    };
+  }
+
+  // Default model selection for other providers
+  return {
+    ...baseConfig,
+    model: provider === 'vapi' ? 'gpt-4' : 'gpt-3.5-turbo'
+  };
 }
 
 // Main menu loop

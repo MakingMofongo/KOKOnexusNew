@@ -1,4 +1,3 @@
-
 import { Vapi } from '@vapi-ai/server-sdk';
 // Remove SDK imports and define our own types
 export type MessageRole = 'system' | 'assistant' | 'user' | 'function';
@@ -210,4 +209,80 @@ export interface UpdateAssistantDto extends Omit<Vapi.UpdateAssistantDto, 'trans
   transcriber?: TranscriberConfig;
 }
 
-export type UpdateAssistantPayload = UpdateAssistantDto; 
+export type UpdateAssistantPayload = UpdateAssistantDto;
+
+export type VapiAssistantProvider = 'vapi' | 'openai' | 'anthropic' | 'google' | 'groq' | 'anyscale' | 'deepinfra' | 'perplexity' | 'together' | 'openrouter';
+export type VapiVoiceProvider = 'azure' | 'cartesia' | '11labs' | 'deepgram' | 'lmnt' | 'neets' | 'openai' | 'playht' | 'rime' | 'tavus';
+export type VapiBackgroundSound = 'off' | 'office';
+export type VapiFirstMessageMode = 'assistant-speaks-first' | 'assistant-speaks-first-with-model-generated-message' | 'assistant-waits-for-user';
+
+export interface VapiAssistantModel {
+  provider: VapiAssistantProvider;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+  emotionRecognitionEnabled?: boolean;
+  messages?: Array<{
+    role: 'assistant' | 'function' | 'user' | 'system' | 'tool';
+    content?: string;
+  }>;
+  numFastTurns?: number;
+  toolIds?: string[];
+}
+
+export interface VapiVoiceConfig {
+  provider: VapiVoiceProvider;
+  voiceId: string;
+  chunkPlan?: {
+    enabled?: boolean;
+    minCharacters?: number;
+    punctuationBoundaries?: string[];
+    formatPlan?: {
+      enabled?: boolean;
+      numberToDigitsCutoff?: number;
+    };
+  };
+  stability?: number;
+  similarityBoost?: number;
+  style?: number;
+  useSpeakerBoost?: boolean;
+}
+
+export interface VapiVoicemailDetection {
+  enabled?: boolean;
+  provider?: string;
+  machineDetectionTimeout?: number;
+  machineDetectionSpeechThreshold?: number;
+  machineDetectionSpeechEndThreshold?: number;
+  machineDetectionSilenceTimeout?: number;
+  voicemailDetectionTypes?: string[];
+}
+
+export interface VapiAssistantConfig {
+  name?: string;
+  firstMessage?: string;
+  model: VapiAssistantModel;
+  voice?: VapiVoiceConfig;
+  transcriber?: TranscriberConfig;
+  firstMessageMode?: VapiFirstMessageMode;
+  hipaaEnabled?: boolean;
+  silenceTimeoutSeconds?: number;
+  maxDurationSeconds?: number;
+  backgroundSound?: VapiBackgroundSound;
+  backgroundDenoisingEnabled?: boolean;
+  modelOutputInMessagesEnabled?: boolean;
+  voicemailDetection?: VapiVoicemailDetection;
+  voicemailMessage?: string;
+  endCallMessage?: string;
+  endCallPhrases?: string[];
+  metadata?: Record<string, any>;
+  serverMessages?: string[];
+  clientMessages?: string[];
+}
+
+export interface VapiAssistant extends VapiAssistantConfig {
+  id: string;
+  orgId: string;
+  createdAt: string;
+  updatedAt: string;
+} 
