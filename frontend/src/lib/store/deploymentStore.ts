@@ -1,126 +1,116 @@
 import { create } from 'zustand'
-import { deploymentApi } from '@/lib/api/deployment'
-import { assistantApi } from '@/lib/api/assistant'
-import { phoneNumberApi } from '@/lib/api/phoneNumber'
-import type { BusinessConfig, DeploymentResult } from '@/types/business'
+import { BusinessConfig, DeploymentResult } from '@backend/types/business'
+import { Assistant } from '@backend/types/assistant'
+import { PhoneNumber } from '@backend/types/phoneNumber'
 
 interface DeploymentState {
   step: 'template' | 'voice' | 'number' | 'deploy'
-  selectedIndustry: string | null
-  selectedTemplate: string | null
+  businessConfig: Partial<BusinessConfig>
+  selectedTemplate: string
   selectedVoice: {
-    id: string
+    provider: string
+    voiceId: string
     name: string
-    preview: string
   } | null
   selectedNumber: {
     number: string
     location: string
-    type: 'local' | 'tollfree'
   } | null
-  deploymentStatus: 'idle' | 'deploying' | 'success' | 'error'
   deploymentResult: DeploymentResult | null
-  deploymentError: string | null
-  industry: string | null
-  template: string | null
-  customConfig?: {
-    industry: string
-    businessType: string
-    primaryLanguage: string
-    additionalLanguages: string[]
-    tone: string
-  }
+  isDeploying: boolean
+  error: string | null
+
+  // Actions
   setStep: (step: DeploymentState['step']) => void
-  setIndustry: (industry: string) => void
+  updateBusinessConfig: (config: Partial<BusinessConfig>) => void
   setTemplate: (template: string) => void
   setVoice: (voice: DeploymentState['selectedVoice']) => void
   setNumber: (number: DeploymentState['selectedNumber']) => void
-  setCustomConfig: (config: any) => void
   deploy: () => Promise<void>
   reset: () => void
 }
 
 export const useDeploymentStore = create<DeploymentState>((set, get) => ({
   step: 'template',
-  selectedIndustry: null,
-  selectedTemplate: null,
+  businessConfig: {},
+  selectedTemplate: '',
   selectedVoice: null,
   selectedNumber: null,
-  deploymentStatus: 'idle',
   deploymentResult: null,
-  deploymentError: null,
-  industry: null,
-  template: null,
-  customConfig: undefined,
+  isDeploying: false,
+  error: null,
 
   setStep: (step) => set({ step }),
-  setIndustry: (industry) => set({ selectedIndustry: industry }),
+  
+  updateBusinessConfig: (config) => set((state) => ({
+    businessConfig: { ...state.businessConfig, ...config }
+  })),
+
   setTemplate: (template) => set({ selectedTemplate: template }),
+  
   setVoice: (voice) => set({ selectedVoice: voice }),
+  
   setNumber: (number) => set({ selectedNumber: number }),
-  setCustomConfig: (config) => set({ customConfig: config }),
 
   deploy: async () => {
     const state = get()
-    if (!state.selectedTemplate || !state.selectedVoice || !state.selectedNumber) {
-      set({ deploymentError: 'Missing required configuration' })
-      return
-    }
-
-    set({ deploymentStatus: 'deploying', deploymentError: null })
+    set({ isDeploying: true, error: null })
 
     try {
-      // Create business config from state
+      // Create full business config
       const config: BusinessConfig = {
-        businessName: 'Test Business', // TODO: Add to state
-        industry: state.selectedIndustry as any,
-        template: state.selectedTemplate,
-        voice: state.selectedVoice.id,
-        phoneNumber: state.selectedNumber.number,
-        size: 'small',
-        region: 'US',
-        expectedCallVolume: 100,
-        businessHours: {
+        ...state.businessConfig,
+        businessName: state.businessConfig.businessName || '',
+        industry: state.businessConfig.industry || 'retail',
+        size: state.businessConfig.size || 'small',
+        region: state.businessConfig.region || 'US',
+        expectedCallVolume: state.businessConfig.expectedCallVolume || 100,
+        languages: state.businessConfig.languages || ['en'],
+        tone: state.businessConfig.tone || 'professional',
+        businessHours: state.businessConfig.businessHours || {
           timezone: 'America/New_York',
-          weekdays: {
-            start: '09:00',
-            end: '17:00'
-          },
-          weekend: {
-            start: '10:00',
-            end: '15:00'
-          }
-        },
-        languages: ['en'],
-        tone: 'professional'
+          schedule: [
+            {
+              days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+              hours: '9:00-17:00'
+            }
+          ]
+        }
       }
 
-      // Deploy
-      const result = await deploymentApi.deploy(config)
-      set({ 
-        deploymentStatus: 'success',
-        deploymentResult: result,
-        step: 'deploy'
+      // Call backend deployment service
+      const response = await fetch('/api/deploy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          config,
+          template: state.selectedTemplate,
+          voice: state.selectedVoice,
+          number: state.selectedNumber
+        })
       })
+
+      if (!response.ok) {
+        throw new Error('Deployment failed')
+      }
+
+      const result = await response.json()
+      set({ deploymentResult: result, step: 'deploy' })
+
     } catch (error) {
-      set({ 
-        deploymentStatus: 'error',
-        deploymentError: error instanceof Error ? error.message : 'Deployment failed'
-      })
+      set({ error: error instanceof Error ? error.message : 'Unknown error' })
+    } finally {
+      set({ isDeploying: false })
     }
   },
 
   reset: () => set({
     step: 'template',
-    selectedIndustry: null,
-    selectedTemplate: null,
+    businessConfig: {},
+    selectedTemplate: '',
     selectedVoice: null,
     selectedNumber: null,
-    deploymentStatus: 'idle',
     deploymentResult: null,
-    deploymentError: null,
-    industry: null,
-    template: null,
-    customConfig: undefined,
-  }),
+    error: null
+  })
 })) 

@@ -1,197 +1,267 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { TRANSITIONS, SPRING, HOVER_SPRING } from '@/lib/constants/animations'
+import { SPRING } from '@/lib/constants/animations'
+import Image from 'next/image'
 
 const features = [
   {
-    title: 'Multilingual Support',
-    description: 'Support customers in multiple languages with natural voice interactions',
-    icon: '🌍',
-    gradient: 'from-blue-500 to-indigo-500',
+    title: 'Neural Voice Engine',
+    category: 'Voice Technology',
+    description: 'Ultra-realistic voice synthesis powered by Eleven Labs',
+    icon: 'fa-waveform-lines',
+    color: 'purple',
+    demo: {
+      image: 'https://images.unsplash.com/photo-1589254065878-42c9da997008?ixlib=rb-4.0.3',
+      title: 'Voice Synthesis',
+      caption: 'Powered by Eleven Labs v2'
+    },
+    metrics: [
+      { value: '99.8%', label: 'Natural Speech', icon: 'fa-wave-square' },
+      { value: '<50ms', label: 'Latency', icon: 'fa-bolt' },
+      { value: '95+', label: 'Voices', icon: 'fa-microphone' }
+    ],
+    techSpecs: [
+      { title: 'Voice Model', value: 'Eleven Labs v2', icon: 'fa-wave-square' },
+      { title: 'Voice Cloning', value: 'Supported', icon: 'fa-clone' },
+      { title: 'Emotion Control', value: 'Advanced', icon: 'fa-face-smile' },
+      { title: 'Streaming', value: 'Real-time', icon: 'fa-broadcast-tower' }
+    ],
+    capabilities: [
+      'Instant Voice Cloning',
+      'Emotional Intelligence',
+      'Multi-speaker Synthesis',
+      'Real-time Streaming',
+      'Voice Design Studio',
+      'Custom Voice Training'
+    ]
   },
   {
-    title: 'Industry Templates',
-    description: 'Pre-built templates optimized for your specific industry needs',
-    icon: '📋',
-    gradient: 'from-purple-500 to-pink-500',
+    title: 'Language Processing',
+    category: 'AI & ML',
+    description: 'Custom language detection model with Deepgram transcription',
+    icon: 'fa-language',
+    color: 'blue',
+    demo: {
+      image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3',
+      title: 'Language Intelligence',
+      caption: 'Neural language detection & transcription'
+    },
+    metrics: [
+      { value: '95+', label: 'Languages', icon: 'fa-language' },
+      { value: '0.2s', label: 'Detection', icon: 'fa-bolt' },
+      { value: '99.2%', label: 'Accuracy', icon: 'fa-bullseye' }
+    ],
+    techSpecs: [
+      { title: 'Speech-to-Text', value: 'Deepgram Nova', icon: 'fa-file-audio' },
+      { title: 'Detection', value: 'Custom Model', icon: 'fa-brain' },
+      { title: 'Transcription', value: 'Real-time', icon: 'fa-clock' },
+      { title: 'Context', value: 'Preserved', icon: 'fa-link' }
+    ],
+    capabilities: [
+      'Real-time Transcription',
+      'Language Detection',
+      'Accent Recognition',
+      'Context Preservation',
+      'Cultural Adaptation',
+      'Semantic Analysis'
+    ]
   },
   {
-    title: 'Real-time Analytics',
-    description: 'Monitor and optimize performance with detailed analytics',
-    icon: '📊',
-    gradient: 'from-green-500 to-teal-500',
-  },
-  {
-    title: 'Custom Voice & Personality',
-    description: 'Customize voice and personality to match your brand',
-    icon: '🎭',
-    gradient: 'from-orange-500 to-red-500',
-  },
+    title: 'Speech Recognition',
+    category: 'Audio Processing',
+    description: 'High-accuracy speech recognition with Gladia',
+    icon: 'fa-ear-listen',
+    color: 'green',
+    demo: {
+      image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3',
+      title: 'Speech Recognition',
+      caption: 'Powered by Gladia AI'
+    },
+    metrics: [
+      { value: '99%', label: 'Accuracy', icon: 'fa-check-circle' },
+      { value: '<1s', label: 'Processing', icon: 'fa-clock' },
+      { value: '40+', label: 'Accents', icon: 'fa-globe' }
+    ],
+    techSpecs: [
+      { title: 'Engine', value: 'Gladia AI', icon: 'fa-microphone' },
+      { title: 'Processing', value: 'Streaming', icon: 'fa-stream' },
+      { title: 'Noise Cancel', value: 'Advanced', icon: 'fa-volume-slash' },
+      { title: 'Diarization', value: 'Real-time', icon: 'fa-users' }
+    ],
+    capabilities: [
+      'Noise Cancellation',
+      'Speaker Diarization',
+      'Accent Detection',
+      'Punctuation',
+      'Word Timestamps',
+      'Confidence Scores'
+    ]
+  }
 ]
 
+const colorVariants = {
+  purple: 'border-purple-500 text-purple-400 bg-purple-900/20',
+  blue: 'border-blue-500 text-blue-400 bg-blue-900/20',
+  green: 'border-green-500 text-green-400 bg-green-900/20'
+}
+
 export function FeaturesSection() {
+  const [activeFeature, setActiveFeature] = useState(0)
+
   return (
-    <section id="features" className="relative py-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Background Elements with reactive gradients */}
-      <motion.div 
-        className="absolute inset-0"
-        initial={false}
-        animate={{ 
-          background: [
-            "radial-gradient(circle at 0% 0%, hsl(var(--purple-ghost)) 0%, transparent 50%)",
-            "radial-gradient(circle at 100% 100%, hsl(var(--purple-ghost)) 0%, transparent 50%)"
-          ]
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "linear"
-        }}
-      />
+    <section className="py-32 relative overflow-hidden bg-gray-900" id="features">
+      {/* Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 grid-bg opacity-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-blue-900/20" />
+      </div>
 
-      <div className="container mx-auto relative">
-        <motion.div 
-          className="text-center mb-20"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={SPRING}
-        >
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="text-center mb-20">
           <motion.div
-            className="inline-block px-4 py-2 rounded-full glass-panel mb-6
-                       border border-[hsl(var(--purple-main)/0.2)]"
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={SPRING}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="text-sm font-medium bg-gradient-to-r from-[hsl(var(--purple-main))] to-[hsl(var(--purple-light))] 
-                           bg-clip-text text-transparent">
-              Powerful Features ✨
-            </span>
-          </motion.div>
-
-          <motion.h2 
-            className="heading-2 mb-6 bg-gradient-to-r from-[hsl(var(--purple-main))] to-[hsl(var(--purple-light))] 
-                       bg-clip-text text-transparent"
-            initial={{ opacity: 0, y: 20 }}
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-white/5 border-[3px] border-purple-500 mb-8"
+            initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ ...SPRING, delay: 0.1 }}
           >
-            Everything You Need
-          </motion.h2>
-          <motion.p 
-            className="body-large max-w-2xl mx-auto"
+            <i className="fas fa-microchip text-purple-400" />
+            <span className="text-sm font-medium text-purple-400">
+              Technical Specifications
+            </span>
+          </motion.div>
+
+          <motion.h2 
+            className="text-4xl md:text-5xl font-bold mb-6 text-white"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ ...SPRING, delay: 0.2 }}
           >
-            Deploy and manage AI call assistants with enterprise-grade features
-          </motion.p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              className="glass-panel p-8 relative group cursor-pointer"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ ...SPRING, delay: index * 0.1 }}
-              whileHover={{ 
-                y: -8, 
-                scale: 1.02,
-                transition: HOVER_SPRING
-              }}
-              whileTap={{ 
-                scale: 0.98,
-                transition: { duration: 0.1 } 
-              }}
-            >
-              {/* Feature Icon with reactive animation */}
-              <motion.div 
-                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} 
-                           flex items-center justify-center mb-6 text-2xl shadow-lg`}
-                whileHover={{ 
-                  scale: 1.1,
-                  rotate: [0, -5, 5, 0],
-                  transition: {
-                    rotate: {
-                      duration: 0.2,
-                      repeat: 1,
-                      repeatType: "reverse"
-                    }
-                  }
-                }}
-              >
-                {feature.icon}
-              </motion.div>
-
-              {/* Feature Content */}
-              <motion.h3 
-                className="text-xl font-bold font-space mb-3 bg-gradient-to-r 
-                         from-[hsl(var(--purple-main))] to-[hsl(var(--purple-light))]
-                         bg-clip-text text-transparent"
-                whileHover={{ x: 4 }}
-                transition={{ duration: 0.1 }}
-              >
-                {feature.title}
-              </motion.h3>
-              <p className="text-[hsl(var(--purple-main)/0.8)] leading-relaxed">
-                {feature.description}
-              </p>
-
-              {/* Enhanced Hover Effect */}
-              <motion.div 
-                className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--purple-main)/0.1)] 
-                          to-transparent opacity-0 group-hover:opacity-100 rounded-2xl"
-                initial={false}
-                whileHover={{
-                  background: [
-                    "linear-gradient(45deg, hsla(var(--purple-main)/0.1) 0%, transparent 100%)",
-                    "linear-gradient(45deg, hsla(var(--purple-light)/0.1) 0%, transparent 100%)"
-                  ]
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              />
-            </motion.div>
-          ))}
+            Enterprise-Grade Technology
+          </motion.h2>
         </div>
 
-        {/* Call to Action with snappy animation */}
-        <motion.div
-          className="mt-20 text-center"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={SPRING}
-        >
-          <motion.button 
-            className="button-primary"
-            whileHover={{ 
-              scale: 1.05,
-              transition: HOVER_SPRING
-            }}
-            whileTap={{ 
-              scale: 0.95,
-              transition: { duration: 0.1 }
-            }}
-          >
-            Explore All Features
-          </motion.button>
-        </motion.div>
+        {/* Features Grid */}
+        <div className="grid lg:grid-cols-2 gap-12">
+          {/* Feature Navigation */}
+          <div className="space-y-6">
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                className={`group relative p-6 cursor-pointer transition-all duration-300
+                         border-[3px] ${activeFeature === index ? 'bg-white/10 border-purple-500' : 'border-white/10 hover:border-purple-500/50'}`}
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ ...SPRING, delay: index * 0.1 }}
+                onClick={() => setActiveFeature(index)}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 border-2 border-purple-500 flex items-center justify-center">
+                    <i className={`fas ${feature.icon} text-2xl text-purple-400`} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-purple-400 mb-1">{feature.category}</div>
+                    <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                    <p className="text-gray-400">{feature.description}</p>
+                  </div>
+                </div>
+
+                {/* Technical Metrics */}
+                <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/10">
+                  {feature.metrics.map((metric) => (
+                    <div key={metric.label} className="text-center group">
+                      <div className="text-xl font-bold text-white mb-1 flex items-center justify-center gap-2">
+                        <i className={`fas ${metric.icon} text-purple-400 group-hover:scale-110 transition-transform`} />
+                        {metric.value}
+                      </div>
+                      <div className="text-sm text-gray-500">{metric.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Technical Details */}
+          <div className="relative">
+            <motion.div
+              className="sticky top-8 space-y-8"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={SPRING}
+            >
+              {/* Technical Visualization */}
+              <div className="relative aspect-video overflow-hidden border-[3px] border-purple-500">
+                <Image
+                  src={features[activeFeature].demo.image}
+                  alt={features[activeFeature].demo.title}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <h4 className="text-xl font-bold text-white mb-2">
+                    {features[activeFeature].demo.title}
+                  </h4>
+                  <p className="text-white/80">
+                    {features[activeFeature].demo.caption}
+                  </p>
+                </div>
+              </div>
+
+              {/* Technical Specifications */}
+              <div className="bg-white/5 border-[3px] border-purple-500 p-6">
+                <h4 className="text-lg font-bold text-white mb-6">Technical Specifications</h4>
+                <div className="grid grid-cols-2 gap-6">
+                  {features[activeFeature].techSpecs.map((spec) => (
+                    <div key={spec.title} className="flex items-center gap-3 group">
+                      <div className="w-10 h-10 border-2 border-purple-500 flex items-center justify-center">
+                        <i className={`fas ${spec.icon} text-purple-400 group-hover:scale-110 transition-transform`} />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-400">{spec.title}</div>
+                        <div className="text-white font-mono">{spec.value}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Capabilities Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                {features[activeFeature].capabilities.map((capability) => (
+                  <div key={capability} className="flex items-center gap-2 p-4 bg-white/5 border border-purple-500/20">
+                    <div className="w-4 h-4 border-2 border-purple-500 flex items-center justify-center">
+                      <i className="fas fa-check text-xs text-purple-400" />
+                    </div>
+                    <span className="text-gray-400 text-sm">{capability}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Live Demo Button */}
+              <motion.button
+                className="w-full p-4 bg-purple-500/20 border-[3px] border-purple-500 
+                         hover:bg-purple-500/30 transition-colors duration-300 group"
+                whileHover={{ x: 4 }}
+                onClick={() => window.location.href='tel:+13394997114'}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <i className="fas fa-phone-volume text-purple-400 group-hover:animate-pulse" />
+                    <span className="text-white">Experience Live Demo</span>
+                  </div>
+                  <i className="fas fa-arrow-right text-purple-400" />
+                </div>
+              </motion.button>
+            </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   )

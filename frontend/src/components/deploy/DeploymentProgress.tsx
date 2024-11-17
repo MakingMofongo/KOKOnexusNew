@@ -3,61 +3,67 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { useDeploymentStore } from '@/lib/store/deploymentStore'
+import { SPRING } from '@/lib/constants/animations'
 
 const steps = [
-  { id: 'template', name: 'Select Template' },
-  { id: 'voice', name: 'Choose Voice' },
-  { id: 'number', name: 'Phone Number' },
-  { id: 'deploy', name: 'Deploy' },
+  { id: 'template', name: 'Select Template', icon: 'fa-list-check' },
+  { id: 'voice', name: 'Choose Voice', icon: 'fa-microphone' },
+  { id: 'number', name: 'Phone Number', icon: 'fa-phone' },
+  { id: 'deploy', name: 'Deploy', icon: 'fa-rocket' },
 ] as const
 
 export function DeploymentProgress() {
   const currentStep = useDeploymentStore(state => state.step)
-  const setStep = useDeploymentStore(state => state.setStep)
-
-  const currentStepIndex = steps.findIndex(s => s.id === currentStep)
-  const progress = ((currentStepIndex + 1) / steps.length) * 100
 
   return (
-    <div className="mb-12">
+    <motion.div 
+      className="mb-12"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={SPRING}
+    >
       <div className="max-w-3xl mx-auto">
         <div className="relative">
-          {/* Progress Bar */}
-          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-[hsl(var(--purple-ghost))] -translate-y-1/2" />
-          <motion.div 
-            className="absolute top-1/2 left-0 h-0.5 bg-[hsl(var(--purple-main))] -translate-y-1/2"
-            initial={{ width: '0%' }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.5 }}
-          />
+          {/* Progress Line */}
+          <div className="absolute top-5 left-0 w-full h-[3px] bg-purple-100">
+            <motion.div 
+              className="h-full bg-purple-600"
+              initial={{ width: '0%' }}
+              animate={{ 
+                width: currentStep === 'template' ? '0%' :
+                       currentStep === 'voice' ? '33%' :
+                       currentStep === 'number' ? '66%' :
+                       '100%'
+              }}
+              transition={SPRING}
+            />
+          </div>
 
           {/* Steps */}
-          <div className="relative z-10 flex justify-between">
+          <div className="relative flex justify-between">
             {steps.map((step, index) => {
-              const isComplete = index <= currentStepIndex
-              const isCurrent = step.id === currentStep
-
+              const isActive = step.id === currentStep
+              const isPast = steps.findIndex(s => s.id === currentStep) > index
+              
               return (
                 <div key={step.id} className="flex flex-col items-center">
-                  <motion.button
-                    className={`w-8 h-8 rounded-full flex items-center justify-center
-                               ${isCurrent 
-                                 ? 'bg-[hsl(var(--purple-main))] text-white'
-                                 : isComplete
-                                 ? 'bg-[hsl(var(--purple-main))] text-white'
-                                 : 'bg-[hsl(var(--purple-ghost))] text-[hsl(var(--purple-main))]'}`}
+                  <motion.div 
+                    className={`w-10 h-10 rounded-full border-[3px] flex items-center justify-center
+                              ${isActive || isPast ? 'border-purple-600 bg-purple-50' : 'border-purple-200 bg-white'}`}
                     whileHover={{ scale: 1.1 }}
-                    onClick={() => isComplete && setStep(step.id)}
+                    transition={SPRING}
                   >
-                    {isComplete ? '✓' : index + 1}
-                  </motion.button>
-                  <span className="mt-2 text-sm font-medium">{step.name}</span>
+                    <i className={`fas ${step.icon} ${isActive || isPast ? 'text-purple-600' : 'text-purple-200'}`} />
+                  </motion.div>
+                  <div className="mt-2 text-sm font-medium text-gray-600">
+                    {step.name}
+                  </div>
                 </div>
               )
             })}
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 } 

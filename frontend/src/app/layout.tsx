@@ -1,15 +1,13 @@
-import React from 'react'
-import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
-import { ClientLayout } from '@/components/shared/ClientLayout'
-import '@/app/globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { FloatingCTA } from '@/components/shared/FloatingCTA'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space' })
-const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-code' })
+const inter = Inter({ subsets: ['latin'] })
 
-export const metadata = {
-  title: 'Koko Nexus',
-  description: 'AI-Powered Call Assistant Platform',
+export const metadata: Metadata = {
+  title: 'KOKO NEXUS | Multilingual Voice AI Platform',
+  description: 'Next-generation AI receptionist platform for modern businesses.',
 }
 
 export default function RootLayout({
@@ -18,11 +16,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans`} suppressHydrationWarning>
-        <ClientLayout>
-          {children}
-        </ClientLayout>
+    <html lang="en">
+      <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+      </head>
+      <body className={`${inter.className} bg-white overflow-x-hidden`}>
+        {children}
+        <FloatingCTA />
       </body>
     </html>
   )

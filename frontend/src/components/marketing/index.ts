@@ -1,2 +1,6 @@
 export * from './HeroSection'
-export * from './FeaturesSection' 
+export * from './FeaturesSection'
+export * from './AudioDemoSection'
+export * from './HowItWorksSection'
+export * from './PricingSection'
+export * from './CTASection' 

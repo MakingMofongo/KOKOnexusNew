@@ -89,6 +89,45 @@
            hover:bg-[hsl(var(--purple-ghost))] hover:translate-y-[-2px] 
            active:translate-y-[0px] transition-all duration-200;
   }
+
+  .boxy-gradient {
+    @apply bg-gradient-to-r from-purple-600 to-blue-600 p-[1px];
+  }
+
+  .boxy-panel {
+    @apply border-[3px] border-purple-600 bg-white shadow-sharp;
+  }
+
+  .boxy-button {
+    @apply px-6 py-3 border-[3px] border-purple-600 bg-white text-purple-600 
+           hover:bg-purple-600 hover:text-white transition-colors duration-200
+           [--shadow-color:theme(colors.purple.600)] hover:[--shadow-color:transparent]
+           hover:translate-x-1 hover:translate-y-1;
+    box-shadow: 4px 4px 0px 0px var(--shadow-color);
+  }
+
+  .boxy-button-filled {
+    @apply px-6 py-3 bg-purple-600 text-white border-[3px] border-purple-600
+           [--shadow-color:theme(colors.purple.600)] hover:[--shadow-color:transparent]
+           hover:translate-x-1 hover:translate-y-1 transition-all duration-200;
+    box-shadow: 4px 4px 0px 0px var(--shadow-color);
+  }
+
+  .boxy-input {
+    @apply border-[3px] border-purple-600 px-4 py-2 focus:outline-none
+           focus:ring-0 focus:border-purple-700;
+    box-shadow: 2px 2px 0px 0px var(--shadow-color);
+  }
+
+  .boxy-card {
+    @apply border-[3px] border-purple-600 bg-white p-6;
+    box-shadow: 4px 4px 0px 0px var(--shadow-color);
+    --shadow-color: theme(colors.purple.600);
+  }
+
+  .boxy-badge {
+    @apply px-3 py-1 border-[2px] border-purple-600 text-purple-600 text-sm;
+  }
 }
 
 /* Animations */
@@ -113,5 +152,129 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-[hsl(var(--purple-main)/0.2)] rounded-full 
          hover:bg-[hsl(var(--purple-main)/0.3)] transition-colors;
+}
+
+@keyframes message-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-animation {
+  animation: message-appear 0.3s ease-out forwards;
+}
+
+.conversation-card {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2));
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.message-bubble {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(99, 102, 241, 0.1));
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.language-switch {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(99, 102, 241, 0.2));
+  animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.5);
+  }
+}
+
+/* Grid background */
+.grid-bg {
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, rgba(124, 58, 237, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(124, 58, 237, 0.1) 1px, transparent 1px);
+  animation: grid-move 20s linear infinite;
+}
+
+/* Scanlines */
+.scanline {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(124, 58, 237, 0.5), transparent);
+  animation: scanline 3s linear infinite;
+}
+
+.scanline-vertical {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(124, 58, 237, 0.5), transparent);
+  animation: scanline-vertical 3s linear infinite;
+}
+
+/* Sharp corners for all rounded elements */
+.rounded,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl,
+.rounded-full {
+  border-radius: 0 !important;
+}
+
+/* Grid background with sharp lines */
+.grid-bg {
+  background-image: linear-gradient(to right, rgba(124, 58, 237, 0.1) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(124, 58, 237, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Sharp scanlines */
+.scanline {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.5), transparent);
+}
+
+.scanline-vertical {
+  width: 2px;
+  background: linear-gradient(180deg, transparent, rgba(124, 58, 237, 0.5), transparent);
+}
+
+/* Geometric decorations */
+.geometric-pattern {
+  background-image: repeating-linear-gradient(45deg, 
+    rgba(124, 58, 237, 0.1) 0, 
+    rgba(124, 58, 237, 0.1) 1px, 
+    transparent 0, 
+    transparent 50%
+  );
+  background-size: 10px 10px;
+}
+
+/* Sharp glowing effect */
+.glow-sharp {
+  box-shadow: 
+    0 0 0 1px rgba(124, 58, 237, 0.2),
+    0 0 0 3px rgba(124, 58, 237, 0.1),
+    0 0 0 6px rgba(124, 58, 237, 0.05);
+}
+
+/* Sharp hover effects */
+.hover-lift-sharp {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift-sharp:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 4px 4px 0 0 currentColor;
 }
 
