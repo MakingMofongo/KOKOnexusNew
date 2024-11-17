@@ -10,8 +10,9 @@ export async function createCallAssistant(token: string) {
     
     // Voice and transcription settings
     voice: {
-      provider: "rime-ai",
-      voiceId: "marsh", // A natural-sounding voice
+      provider: "11labs",
+      voiceId: "marsh",
+      model: "eleven_turbo_v2_5",
       speed: 1.0,
       chunkPlan: {
         enabled: true,
@@ -24,9 +25,13 @@ export async function createCallAssistant(token: string) {
     },
     
     transcriber: {
-      provider: "talkscriber",
+      provider: "deepgram",
+      codeSwitchingEnabled: false,
+      endpointing: 10,
+      model: "nova-2-phonecall",
       language: "en",
-      model: "whisper"
+      smartFormat: false,
+      keywords: ["vapi", "assistant"]
     },
 
     // Updated model configuration

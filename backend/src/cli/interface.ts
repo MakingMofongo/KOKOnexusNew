@@ -208,6 +208,98 @@ async function configureGladiaTranscriber(): Promise<GladiaTranscriberConfig> {
   return config;
 }
 
+// Update the configureDeepgramTranscriber function
+async function configureDeepgramTranscriber() {
+  const { codeSwitchingEnabled } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'codeSwitchingEnabled',
+      message: 'Enable automatic language switching?',
+      default: false
+    }
+  ]);
+
+  const deepgramConfig: DeepgramTranscriberConfig = {
+    provider: 'deepgram',
+    codeSwitchingEnabled,
+    endpointing: 10, // Default value
+    model: 'nova-2', // Default value
+    language: codeSwitchingEnabled ? 'multi' : undefined, // Set to 'multi' if code switching is enabled
+    smartFormat: false // Default value
+  };
+
+  // Only ask for language if code switching is disabled
+  if (!codeSwitchingEnabled) {
+    const { language } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'language',
+        message: 'Select primary language:',
+        choices: [
+          { name: 'English', value: 'en' },
+          { name: 'Spanish', value: 'es' },
+          { name: 'French', value: 'fr' },
+          { name: 'German', value: 'de' },
+          { name: 'Japanese', value: 'ja' },
+          { name: 'Korean', value: 'ko' },
+          { name: 'Portuguese', value: 'pt' },
+          { name: 'Russian', value: 'ru' },
+          { name: 'Chinese', value: 'zh' }
+        ]
+      }
+    ]);
+    deepgramConfig.language = language;
+  }
+
+  // Continue with other Deepgram settings
+  const { endpointing, keywords, model, smartFormat } = await inquirer.prompt([
+    {
+      type: 'number',
+      name: 'endpointing',
+      message: 'Enter endpointing timeout (10-500ms):',
+      default: 10,
+      validate: (value) => value >= 10 && value <= 500
+    },
+    {
+      type: 'input',
+      name: 'keywords',
+      message: 'Enter keywords (comma-separated):',
+      filter: (input: string) => input.split(',').map(k => k.trim()).filter(k => k)
+    },
+    {
+      type: 'list',
+      name: 'model',
+      message: 'Select Deepgram model:',
+      choices: [
+        { name: 'Nova 2 (General)', value: 'nova-2' },
+        { name: 'Nova 2 (Phone Call)', value: 'nova-2-phonecall' },
+        { name: 'Nova 2 (Meeting)', value: 'nova-2-meeting' },
+        { name: 'Nova 2 (Finance)', value: 'nova-2-finance' },
+        { name: 'Nova 2 (Conversational AI)', value: 'nova-2-conversationalai' },
+        { name: 'Nova 2 (Medical)', value: 'nova-2-medical' },
+        { name: 'Enhanced (General)', value: 'enhanced' },
+        { name: 'Enhanced (Phone Call)', value: 'enhanced-phonecall' },
+        { name: 'Base (General)', value: 'base' },
+        { name: 'Base (Phone Call)', value: 'base-phonecall' }
+      ]
+    },
+    {
+      type: 'confirm',
+      name: 'smartFormat',
+      message: 'Enable smart formatting?',
+      default: false
+    }
+  ]);
+
+  // Update the config with the remaining settings
+  deepgramConfig.endpointing = endpointing;
+  if (keywords.length > 0) deepgramConfig.keywords = keywords;
+  deepgramConfig.model = model;
+  deepgramConfig.smartFormat = smartFormat;
+
+  return deepgramConfig;
+}
+
 // Update the existing configureTranscriber function
 async function configureTranscriber() {
   const { provider } = await inquirer.prompt([
@@ -216,8 +308,8 @@ async function configureTranscriber() {
       name: 'provider',
       message: 'Select transcriber provider:',
       choices: [
-        { name: 'Gladia (Advanced multi-language support)', value: 'gladia' },
         { name: 'Deepgram', value: 'deepgram' },
+        { name: 'Gladia', value: 'gladia' },
         { name: 'Custom Transcriber', value: 'custom-transcriber' },
         { name: 'Talkscriber', value: 'talkscriber' }
       ]
@@ -227,6 +319,8 @@ async function configureTranscriber() {
   switch (provider) {
     case 'gladia':
       return configureGladiaTranscriber();
+    case 'deepgram':
+      return configureDeepgramTranscriber();
     // ... other cases remain the same
   }
 }
@@ -1299,7 +1393,7 @@ async function configureVoice(provider: VapiVoiceProvider): Promise<VapiVoiceCon
   };
 
   if (provider === '11labs') {
-    const { voiceId, stability, similarityBoost } = await inquirer.prompt([
+    const { voiceId, model, stability, similarityBoost } = await inquirer.prompt([
       {
         type: 'list',
         name: 'voiceId',
@@ -1319,6 +1413,18 @@ async function configureVoice(provider: VapiVoiceProvider): Promise<VapiVoiceCon
         ]
       },
       {
+        type: 'list',
+        name: 'model',
+        message: 'Select model:',
+        choices: [
+          { name: 'Turbo V2.5 (Recommended)', value: 'eleven_turbo_v2_5' },
+          { name: 'Multilingual V2', value: 'eleven_multilingual_v2' },
+          { name: 'Turbo V2', value: 'eleven_turbo_v2' },
+          { name: 'Monolingual V1', value: 'eleven_monolingual_v1' }
+        ],
+        default: 'eleven_turbo_v2_5'
+      },
+      {
         type: 'number',
         name: 'stability',
         message: 'Enter stability (0-1):',
@@ -1335,6 +1441,7 @@ async function configureVoice(provider: VapiVoiceProvider): Promise<VapiVoiceCon
     ]);
 
     voiceConfig.voiceId = voiceId;
+    voiceConfig.model = model;
     voiceConfig.stability = stability;
     voiceConfig.similarityBoost = similarityBoost;
   }

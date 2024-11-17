@@ -50,7 +50,10 @@ export interface DeepgramTranscriberConfig extends BaseTranscriberConfig {
   endpointing?: number;
   keywords?: string[];
   language?: string;
-  model?: string;
+  model?: 'nova-2' | 'nova-2-general' | 'nova-2-meeting' | 'nova-2-phonecall' | 
+          'nova-2-finance' | 'nova-2-conversationalai' | 'nova-2-medical' | 
+          'enhanced' | 'enhanced-general' | 'enhanced-phonecall' | 'base' | 
+          'base-general' | 'base-phonecall';
   smartFormat?: boolean;
 }
 
@@ -233,6 +236,7 @@ export interface VapiAssistantModel {
 export interface VapiVoiceConfig {
   provider: VapiVoiceProvider;
   voiceId: string;
+  model?: 'eleven_multilingual_v2' | 'eleven_turbo_v2' | 'eleven_turbo_v2_5' | 'eleven_monolingual_v1';
   chunkPlan?: {
     enabled?: boolean;
     minCharacters?: number;
