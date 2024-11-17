@@ -1,4 +1,4 @@
-// File: C:\Users\Abdul Rasheed\Downloads\VapiAssistant\koko-nexus-frontend\src\app\deploy\page.tsx
+// File: C:\Users\Abdul Rasheed\Downloads\VapiAssistant\frontend\src\app\deploy\page.tsx
 import * as entry from '../../../../src/app/deploy/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
