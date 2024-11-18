@@ -1,3 +1,5 @@
 node_modules
 frontend/.next/*
 frontend/.next/
+frontend/.next/cache/webpack/client-development/0.pack.gz
+/frontend/.next
