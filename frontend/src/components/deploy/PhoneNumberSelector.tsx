@@ -43,7 +43,7 @@ interface AvailableNumber {
 }
 
 interface PurchaseConfirmation {
-  number: AvailableNumber;
+  number: AvailableNumber | null;
   isOpen: boolean;
 }
 
@@ -464,34 +464,39 @@ export function PhoneNumberSelector() {
           </div>
         ) : showExisting ? (
           <div className="grid gap-4">
-            {availableNumbers.map((number: PhoneNumber) => (
-              <motion.button
-                key={number.id || number.number}
-                onClick={() => handleAssignNumber(number)}
-                className="group p-6 text-left bg-white rounded-xl border-2 border-gray-200 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow"
-                whileHover={{ scale: 1.02 }}
-                transition={SPRING}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 flex-shrink-0 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                    <PhoneIcon className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">{number.name || 'Unnamed Number'}</h3>
-                    <p className="text-gray-600 font-mono">{number.number}</p>
-                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
-                      <GlobeAmericasIcon className="w-4 h-4" />
-                      <span>{number.provider}</span>
+            {availableNumbers.map((number) => {
+              if (!('phoneNumber' in number)) {
+                return (
+                  <motion.button
+                    key={number.id || number.number}
+                    onClick={() => handleAssignNumber(number)}
+                    className="group p-6 text-left bg-white rounded-xl border-2 border-gray-200 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow"
+                    whileHover={{ scale: 1.02 }}
+                    transition={SPRING}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                        <PhoneIcon className="w-6 h-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">{number.name || 'Unnamed Number'}</h3>
+                        <p className="text-gray-600 font-mono">{number.number}</p>
+                        <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                          <GlobeAmericasIcon className="w-4 h-4" />
+                          <span>{number.provider}</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </motion.button>
-            ))}
+                  </motion.button>
+                );
+              }
+              return null;
+            })}
           </div>
         ) : (
           <div className="grid gap-4">
-            {(availableNumbers as AvailableNumber[]).map((number) => 
-              number && 'phoneNumber' in number ? renderNumberCard(number) : null
+            {availableNumbers.map((number) => 
+              'phoneNumber' in number ? renderNumberCard(number as AvailableNumber) : null
             )}
           </div>
         )}

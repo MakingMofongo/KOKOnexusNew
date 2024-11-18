@@ -57,8 +57,9 @@ export default function DeployPage() {
             </p>
           </header>
 
-        {renderStep()}
-      </motion.div>
-    </>
+          {renderStep()}
+        </motion.div>
+      </div>
+    </div>
   )
 } 
