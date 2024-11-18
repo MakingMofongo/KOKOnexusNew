@@ -51,35 +51,58 @@ export class PhoneNumberService {
       };
 
       let numbers;
-      switch (type) {
-        case 'local':
-          numbers = await twilioClient.availablePhoneNumbers(country)
-            .local.list(searchParams);
-          break;
-        case 'tollfree':
-          numbers = await twilioClient.availablePhoneNumbers(country)
-            .tollFree.list(searchParams);
-          break;
-        case 'mobile':
-          numbers = await twilioClient.availablePhoneNumbers(country)
-            .mobile.list(searchParams);
-          break;
-        default:
-          throw new Error('Invalid number type');
-      }
+      try {
+        switch (type) {
+          case 'local':
+            numbers = await twilioClient.availablePhoneNumbers(country)
+              .local.list(searchParams);
+            break;
+          case 'tollfree':
+            numbers = await twilioClient.availablePhoneNumbers(country)
+              .tollFree.list(searchParams);
+            break;
+          case 'mobile':
+            numbers = await twilioClient.availablePhoneNumbers(country)
+              .mobile.list(searchParams);
+            break;
+          default:
+            throw new Error('Invalid number type');
+        }
 
-      return {
-        success: true,
-        data: numbers.map(num => ({
+        // Transform the response to match the expected format
+        const formattedNumbers = numbers.map(num => ({
           phoneNumber: num.phoneNumber,
           friendlyName: num.friendlyName,
-          locality: num.locality,
-          region: num.region,
-          isoCountry: num.isoCountry,
-          capabilities: num.capabilities
-        }))
-      };
+          locality: num.locality || '',
+          region: num.region || '',
+          country: num.isoCountry,
+          capabilities: {
+            voice: num.capabilities.voice || false,
+            sms: num.capabilities.sms || false,
+            mms: num.capabilities.mms || false
+          },
+          type: type,
+          price: {
+            amount: 0,
+            currency: 'USD'
+          }
+        }));
+
+        return {
+          success: true,
+          data: formattedNumbers
+        };
+
+      } catch (twilioError) {
+        console.error('Twilio API Error:', twilioError);
+        return {
+          success: false,
+          error: twilioError instanceof Error ? twilioError.message : 'Failed to fetch numbers from Twilio'
+        };
+      }
+
     } catch (error) {
+      console.error('Phone Service Error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch available numbers'

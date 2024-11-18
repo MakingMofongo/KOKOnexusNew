@@ -12,8 +12,7 @@ import { FileService } from '../services/fileService';
 import * as fs from 'fs';
 import * as path from 'path';
 import { File } from '../types/file';
-import { TranscriberConfig } from '../types/assistant';
-import { GladiaLanguage, GladiaLanguageBehaviour, GladiaTranscriberConfig } from '../types/assistant';
+import { TranscriberConfig, DeepgramTranscriberConfig, GladiaTranscriberConfig, GladiaLanguage, GladiaLanguageBehaviour } from '../types/assistant';
 import twilio from 'twilio';
 import { VapiVoiceProvider, VapiVoiceConfig } from '../types/assistant';
 

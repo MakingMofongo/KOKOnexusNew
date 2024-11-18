@@ -90,8 +90,9 @@ const templates = [
 
 export function TemplateSelector() {
   const setIndustry = useDeploymentStore(state => state.setIndustry)
-  const setTemplate = useDeploymentStore(state => state.setTemplate)
+  const setSelectedTemplate = useDeploymentStore(state => state.setSelectedTemplate)
   const setStep = useDeploymentStore(state => state.setStep)
+
   const [selectedIndustry, setSelectedIndustryState] = React.useState<string | null>(null)
   const [customConfig, setCustomConfig] = React.useState({
     industry: '',
@@ -113,23 +114,24 @@ export function TemplateSelector() {
   }
 
   const handleLanguageSubmit = (languages: { primary: string, additional: string[] }) => {
-    setTemplate(selectedTemplate!)
-    setStep('voice')
-    // Store languages in deployment store
-    useDeploymentStore.setState(state => ({
-      ...state,
-      languages: {
-        primary: languages.primary,
-        additional: languages.additional
-      }
-    }))
+    if (selectedTemplate) {
+      setSelectedTemplate(selectedTemplate)
+      setStep('voice')
+      useDeploymentStore.setState(state => ({
+        ...state,
+        languages: {
+          primary: languages.primary,
+          additional: languages.additional
+        }
+      }))
+    }
   }
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setSelectedTemplateState('custom')
     setShowLanguageSelector(true)
-    setTemplate('custom')
+    setSelectedTemplate('custom')
     setIndustry(customConfig.industry)
   }
 

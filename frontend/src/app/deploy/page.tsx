@@ -12,6 +12,11 @@ import { SPRING } from '@/lib/constants/animations'
 
 export default function DeployPage() {
   const step = useDeploymentStore(state => state.step)
+  const setNumber = useDeploymentStore(state => state.setNumber)
+
+  const handleNumberSelect = (number: string) => {
+    setNumber({ number, location: '' }) // Update with proper location if available
+  }
 
   const renderStep = () => {
     switch (step) {
@@ -20,7 +25,7 @@ export default function DeployPage() {
       case 'voice':
         return <VoiceSelector />
       case 'number':
-        return <PhoneNumberSelector />
+        return <PhoneNumberSelector onSelect={handleNumberSelect} />
       case 'deploy':
         return <DeploymentSummary />
       default:

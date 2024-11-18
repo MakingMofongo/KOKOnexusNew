@@ -1,0 +1,1 @@
+export const VAPI_TOKEN = process.env.NEXT_PUBLIC_VAPI_TOKEN || ''; 

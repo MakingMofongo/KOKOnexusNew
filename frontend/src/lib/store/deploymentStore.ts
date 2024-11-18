@@ -5,7 +5,7 @@ import { PhoneNumber } from '@backend/types/phoneNumber'
 
 interface DeploymentState {
   step: 'template' | 'voice' | 'number' | 'deploy'
-  businessConfig: Partial<BusinessConfig>
+  businessConfig: Partial<BusinessConfig> & { assistantId?: string }
   selectedTemplate: string
   selectedVoice: {
     provider: string
@@ -19,15 +19,23 @@ interface DeploymentState {
   deploymentResult: DeploymentResult | null
   isDeploying: boolean
   error: string | null
+  industry: string | null
+  template: string | null
+  languages: {
+    primary: string
+    additional: string[]
+  }
 
   // Actions
   setStep: (step: DeploymentState['step']) => void
   updateBusinessConfig: (config: Partial<BusinessConfig>) => void
-  setTemplate: (template: string) => void
+  setSelectedTemplate: (template: string) => void
   setVoice: (voice: DeploymentState['selectedVoice']) => void
   setNumber: (number: DeploymentState['selectedNumber']) => void
   deploy: () => Promise<void>
   reset: () => void
+  setAssistantId: (id: string) => void
+  setIndustry: (industry: string) => void
 }
 
 export const useDeploymentStore = create<DeploymentState>((set, get) => ({
@@ -39,6 +47,12 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
   deploymentResult: null,
   isDeploying: false,
   error: null,
+  industry: null,
+  template: null,
+  languages: {
+    primary: 'en',
+    additional: []
+  },
 
   setStep: (step) => set({ step }),
   
@@ -46,7 +60,7 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
     businessConfig: { ...state.businessConfig, ...config }
   })),
 
-  setTemplate: (template) => set({ selectedTemplate: template }),
+  setSelectedTemplate: (template) => set({ selectedTemplate: template, template }),
   
   setVoice: (voice) => set({ selectedVoice: voice }),
   
@@ -97,6 +111,21 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
       const result = await response.json()
       set({ deploymentResult: result, step: 'deploy' })
 
+      // After successful deployment, update the phone number with the assistant ID
+      if (state.selectedNumber && state.businessConfig.assistantId) {
+        const updateResponse = await fetch(`/api/phone-numbers/${state.selectedNumber.number}/update`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assistantId: state.businessConfig.assistantId
+          })
+        });
+
+        if (!updateResponse.ok) {
+          throw new Error('Failed to update phone number with assistant');
+        }
+      }
+
     } catch (error) {
       set({ error: error instanceof Error ? error.message : 'Unknown error' })
     } finally {
@@ -111,6 +140,18 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
     selectedVoice: null,
     selectedNumber: null,
     deploymentResult: null,
-    error: null
-  })
+    error: null,
+    industry: null,
+    template: null,
+    languages: {
+      primary: 'en',
+      additional: []
+    }
+  }),
+
+  setAssistantId: (id) => set((state) => ({
+    businessConfig: { ...state.businessConfig, assistantId: id }
+  })),
+
+  setIndustry: (industry) => set({ industry }),
 })) 

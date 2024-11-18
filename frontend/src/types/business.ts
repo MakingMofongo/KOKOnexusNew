@@ -4,12 +4,17 @@ export interface BusinessConfig {
   size: 'small' | 'medium' | 'enterprise'
   region: string
   expectedCallVolume: number
-  businessHours: BusinessHours
+  businessHours: {
+    timezone: string
+    schedule: Array<{
+      days: string[]
+      hours: string
+    }>
+  }
+  complianceRequirements?: string[]
   languages: string[]
   tone: 'professional' | 'friendly' | 'casual'
-  template: string
-  voice: string
-  phoneNumber: string
+  assistantId?: string
 }
 
 export interface BusinessHours {

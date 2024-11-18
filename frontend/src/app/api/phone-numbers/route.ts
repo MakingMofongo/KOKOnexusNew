@@ -1,109 +1,92 @@
-import { PhoneNumberService } from '@backend/services/phoneNumberService'
+import { NextResponse } from 'next/server';
+import twilio from 'twilio';
 
-// Get token from environment variables
-const VAPI_TOKEN = process.env.VAPI_TOKEN
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
 
-if (!VAPI_TOKEN) {
-  throw new Error('VAPI_TOKEN is required in environment variables')
-}
-
-const phoneNumberService = new PhoneNumberService(VAPI_TOKEN)
-
-export async function POST(req: Request) {
+export async function GET(request: Request) {
   try {
-    const { country, type, areaCode } = await req.json()
-    
-    console.log('Fetching numbers with params:', { country, type, areaCode })
-    
-    // First get available numbers using the service's listAvailableNumbers method
-    const numbersResult = await phoneNumberService.listAvailableNumbers({
-      country,
-      type,
-      areaCode,
-      limit: 20
-    })
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const country = searchParams.get('country') || 'US';
+    const type = searchParams.get('type') || 'local';
+    const limit = parseInt(searchParams.get('limit') || '10');
 
-    console.log('Numbers result:', numbersResult)
+    // Fetch available numbers directly from Twilio
+    const numbers = await client.availablePhoneNumbers(country)
+      [type === 'tollfree' ? 'tollFree' : 'local']
+      .list({ limit });
 
-    if (!numbersResult.success) {
-      console.error('Failed to fetch numbers:', numbersResult.error)
-      throw new Error(numbersResult.error)
-    }
+    // Format the response
+    const formattedNumbers = numbers.map(number => ({
+      phoneNumber: number.phoneNumber,
+      friendlyName: number.friendlyName,
+      locality: number.locality,
+      region: number.region,
+      isoCountry: number.isoCountry,
+      capabilities: {
+        voice: number.capabilities.voice,
+        SMS: number.capabilities.sms,
+        MMS: number.capabilities.mms,
+      }
+    }));
 
-    // Get pricing using the service's getPhoneNumberPricing method
-    const pricingResult = await phoneNumberService.getPhoneNumberPricing(country)
-
-    console.log('Pricing result:', pricingResult)
-
-    if (!pricingResult.success) {
-      console.error('Failed to fetch pricing:', pricingResult.error)
-      throw new Error(pricingResult.error)
-    }
-
-    return new Response(JSON.stringify({
+    return NextResponse.json({
       success: true,
-      numbers: numbersResult.data,
-      pricing: pricingResult.data
-    }), {
-      headers: { 'Content-Type': 'application/json' }
-    })
-
+      data: formattedNumbers
+    });
   } catch (error) {
-    console.error('Phone number API error:', error)
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch numbers'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    console.error('Error in available-numbers API route:', error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to fetch available numbers' 
+      },
+      { status: 500 }
+    );
   }
 }
 
-export async function PUT(req: Request) {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
-    throw new Error('Twilio credentials are required in environment variables')
+export async function PUT(request: Request) {
+  if (!process.env.NEXT_PUBLIC_BASE_URL) {
+    throw new Error('Missing NEXT_PUBLIC_BASE_URL environment variable');
   }
 
   try {
-    const { number, assistantId } = await req.json()
-    
-    console.log('Purchasing number:', { number, assistantId })
+    const body = await request.json();
+    const { number, assistantId } = body;
 
-    // Purchase the number using the service's createPhoneNumber method
-    const result = await phoneNumberService.createPhoneNumber({
-      provider: 'twilio',
-      number,
-      twilioAccountSid: TWILIO_ACCOUNT_SID,
-      twilioAuthToken: TWILIO_AUTH_TOKEN,
-      assistantId,
-      name: `KOKO AI Number - ${number}`
-    })
+    // Purchase the number through Twilio
+    const purchasedNumber = await client.incomingPhoneNumbers
+      .create({ 
+        phoneNumber: number,
+        voiceUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/voice-webhook`,
+        voiceMethod: 'POST'
+      });
 
-    console.log('Purchase result:', result)
+    // Update the number with a friendly name
+    await client.incomingPhoneNumbers(purchasedNumber.sid)
+      .update({
+        friendlyName: `Assistant ${assistantId}`
+      });
 
-    if (!result.success) {
-      console.error('Failed to purchase number:', result.error)
-      throw new Error(result.error)
-    }
-
-    return new Response(JSON.stringify({
+    return NextResponse.json({
       success: true,
-      data: result.data
-    }), {
-      headers: { 'Content-Type': 'application/json' }
-    })
-
+      data: {
+        phoneNumber: purchasedNumber.phoneNumber,
+        sid: purchasedNumber.sid
+      }
+    });
   } catch (error) {
-    console.error('Phone number purchase error:', error)
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to purchase number'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    console.error('Error purchasing number:', error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to purchase number' 
+      },
+      { status: 500 }
+    );
   }
 } 
