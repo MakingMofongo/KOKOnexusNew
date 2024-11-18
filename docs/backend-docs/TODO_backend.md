@@ -19,6 +19,7 @@
 - [x] GET Get Assistant
 - [x] DEL Delete Assistant
 - [x] PATCH Update Assistant
+- [x] Serverless handlers implementation
 
 ### Phone Numbers
 - [x] GET List Phone Numbers

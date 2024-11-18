@@ -78,9 +78,19 @@ export class AssistantService {
 
   async updateAssistant(id: string, updates: UpdateAssistantDto): Promise<UpdateAssistantResponse> {
     try {
+      console.log('Updating assistant with ID:', id);
+      console.log('Update payload:', updates);
+
       const sdkUpdates: Vapi.UpdateAssistantDto = {
         ...updates,
-        transcriber: updates.transcriber as Vapi.UpdateAssistantDtoTranscriber
+        transcriber: updates.transcriber as Vapi.UpdateAssistantDtoTranscriber,
+        voice: updates.voice && updates.voice.provider === "11labs" ? {
+          provider: "11labs",
+          voiceId: updates.voice.voiceId,
+          model: updates.voice.model,
+          stability: updates.voice.stability,
+          similarityBoost: updates.voice.similarityBoost
+        } : undefined
       };
 
       const assistant = await this.client.assistants.update(id, sdkUpdates);
@@ -89,6 +99,7 @@ export class AssistantService {
         data: assistant as Assistant
       };
     } catch (error) {
+      console.error('Error updating assistant:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'

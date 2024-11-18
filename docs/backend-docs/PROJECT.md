@@ -13,6 +13,11 @@ vapi-assistant/
 │   │   ├── assistantService.ts       # Core Vapi assistant operations
 │   │   ├── phoneNumberService.ts     # Phone number management
 │   │   └── businessDeploymentService.ts # Business-focused deployment logic
+│   ├── serverless/
+│   │   └── handlers/                 # Serverless function handlers
+│   │       ├── phoneNumber.ts        # Phone number API handlers
+│   │       ├── assistant.ts          # Assistant API handlers
+│   │       └── deployment.ts         # Deployment API handlers
 │   ├── templates/
 │   │   ├── baseTemplate.ts          # Base template interface
 │   │   ├── defaultTemplate.ts       # Default implementation
@@ -22,16 +27,49 @@ vapi-assistant/
 │   │   ├── assistant.ts            # Assistant-related types
 │   │   ├── phoneNumber.ts          # Phone number types
 │   │   └── business.ts             # Business configuration types
-│   ├── config/
-│   │   ├── assistantConfig.ts      # Assistant defaults
-│   │   └── phoneNumberConfig.ts    # Provider-specific configs
-│   ├── cli/                        # CLI interface (temporary)
 │   └── config.ts                   # Environment configuration
 ```
 
 ## Core Components
 
-### 1. Template System
+### 1. Serverless Handlers
+Located in `src/serverless/handlers/`, these provide Next.js API route handlers:
+
+```typescript
+// phoneNumber.ts
+export async function handleListPhoneNumbers(req: Request)
+export async function handleCreatePhoneNumber(req: Request)
+export async function handleSearchPhoneNumbers(req: Request)
+export async function handleGetPhoneNumberPricing(req: Request)
+```
+
+### 2. Phone Number Types
+The system supports multiple phone number providers:
+
+```typescript
+type CreatePhoneNumberConfig = 
+  | ByoPhoneNumberConfig 
+  | TwilioPhoneNumberConfig 
+  | VonagePhoneNumberConfig 
+  | VapiPhoneNumberConfig;
+
+interface PhoneNumber {
+  id: string;
+  orgId: string;
+  name?: string;
+  sipUri?: string;
+  number?: string;
+  provider: string;
+  assistantId?: string;
+  createdAt: string;
+  updatedAt: string;
+  isActive?: boolean;
+  twilioAccountSid?: string;
+  twilioAuthToken?: string;
+}
+```
+
+### 3. Template System
 The template system provides industry-specific configurations and behaviors.
 
 #### Base Template (`templates/baseTemplate.ts`)
@@ -65,7 +103,7 @@ Located in `templates/industries/`:
   - Faster voice speed
   - Sales metrics tracking
 
-### 2. Business Deployment Service
+### 4. Business Deployment Service
 `services/businessDeploymentService.ts` handles high-level deployment operations:
 
 ```typescript
@@ -81,7 +119,7 @@ Key features:
 - Analytics setup
 - Cost estimation
 
-### 3. Type System
+### 5. Type System
 
 #### Business Types (`types/business.ts`)
 ```typescript
@@ -95,16 +133,6 @@ interface BusinessConfig {
   languages: string[];
   tone: 'professional' | 'friendly' | 'casual';
 }
-```
-
-#### Phone Number Types (`types/phoneNumber.ts`)
-Provider-specific configurations:
-```typescript
-type CreatePhoneNumberConfig = 
-  | ByoPhoneNumberConfig 
-  | TwilioPhoneNumberConfig 
-  | VonagePhoneNumberConfig 
-  | VapiPhoneNumberConfig;
 ```
 
 ### Transcriber Configuration

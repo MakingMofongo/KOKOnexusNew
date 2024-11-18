@@ -21,27 +21,36 @@ export class BusinessDeploymentService {
 
     // 2. Create the assistant
     const assistantResult = await this.assistantService.createAssistant(assistantConfig);
-    if (!assistantResult.success) {
+    if (!assistantResult.success || !assistantResult.data) {
       throw new Error(`Failed to create assistant: ${assistantResult.error}`);
     }
 
     // 3. Set up optimal phone number based on region and requirements
     const phoneConfig = await this.generatePhoneConfig({
       ...config,
-      assistantId: assistantResult.data!.id
+      assistantId: assistantResult.data.id
     });
 
     const phoneResult = await this.phoneNumberService.createPhoneNumber(phoneConfig);
-    if (!phoneResult.success) {
+    if (!phoneResult.success || !phoneResult.data || !phoneResult.data.number) {
       throw new Error(`Failed to create phone number: ${phoneResult.error}`);
     }
 
     // 4. Set up analytics and monitoring based on business needs
-    const analytics = await this.setupAnalytics(config, assistantResult.data!.id);
+    const analytics = await this.setupAnalytics(config, assistantResult.data.id);
 
+    // 5. Format the response according to DeploymentResult interface
     return {
-      assistant: assistantResult.data!,
-      phoneNumber: phoneResult.data!,
+      success: true,
+      assistant: {
+        id: assistantResult.data.id,
+        name: assistantResult.data.name || config.businessName,
+        phoneNumber: phoneResult.data.number
+      },
+      phoneNumber: {
+        id: phoneResult.data.id,
+        number: phoneResult.data.number
+      },
       analytics,
       quickStartGuide: this.generateQuickStartGuide(config),
       estimatedCosts: this.calculateCosts(config)

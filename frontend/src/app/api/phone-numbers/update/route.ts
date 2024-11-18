@@ -4,12 +4,22 @@ import { VAPI_TOKEN } from '@backend/config';
 
 const phoneNumberService = new PhoneNumberService(VAPI_TOKEN);
 
-export async function GET(req: Request) {
+export async function PUT(req: Request) {
   try {
-    const url = new URL(req.url);
-    const country = url.searchParams.get('country') || 'US';
+    const body = await req.json();
+    const { id, updates } = body;
 
-    const result = await phoneNumberService.getPhoneNumberPricing(country);
+    console.log('Updating phone number:', { id, updates });
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Phone number ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const result = await phoneNumberService.updatePhoneNumber(id, updates);
+    console.log('Update result:', result);
 
     if (!result.success) {
       return NextResponse.json(
@@ -20,7 +30,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error in phone number pricing:', error);
+    console.error('Error in handleUpdatePhoneNumber:', error);
     return NextResponse.json(
       { success: false, error: String(error) },
       { status: 500 }

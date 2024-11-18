@@ -1,5 +1,5 @@
 import { API_BASE } from './config'
-import type { BusinessConfig, DeploymentResult } from '@/types/business'
+import type { BusinessConfig, DeploymentResult } from '@backend/types/business'
 
 export const deploymentApi = {
   deploy: async (config: BusinessConfig): Promise<DeploymentResult> => {

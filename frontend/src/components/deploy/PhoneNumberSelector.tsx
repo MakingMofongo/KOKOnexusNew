@@ -1,177 +1,140 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { SPRING } from '@/lib/constants/animations'
 import { useDeploymentStore } from '@/lib/store/deploymentStore'
+import { 
+  PhoneIcon, 
+  BuildingOfficeIcon,
+  GlobeAmericasIcon,
+  MagnifyingGlassIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  ShoppingCartIcon
+} from '@heroicons/react/24/outline'
 
 interface PhoneNumber {
-  phoneNumber: string;
-  friendlyName: string;
-  locality: string;
-  region: string;
-  isoCountry: string;
-  capabilities: {
-    voice: boolean;
-    SMS: boolean;
-    MMS: boolean;
-  };
-  pricing: {
-    basePrice: string;
-    currentPrice: string;
-    priceUnit: string;
-    voicePrice: string;
-    additionalInfo: {
-      voiceInbound: string;
-      voiceOutbound: string;
-      smsInbound: string;
-      smsOutbound: string;
-    }
-  };
-}
-
-interface PhoneNumberSelectorProps {
-  onSelect?: (number: PhoneNumber) => void;
-  country?: string;
-  type?: 'local' | 'tollfree';
-}
-
-interface Assistant {
   id: string;
-  name: string;
-  type: string;
-  status: string;
+  number: string;
+  name?: string;
+  provider: string;
+  createdAt: string;
+  locality?: string;
+  region?: string;
 }
 
-interface ExistingPhoneNumber {
+interface AvailableNumber {
   phoneNumber: string;
   friendlyName: string;
   locality: string;
   region: string;
-  isoCountry: string;
+  country: string;
   capabilities: {
     voice: boolean;
-    SMS: boolean;
-    MMS: boolean;
+    sms: boolean;
+    mms: boolean;
   };
-  status: string;
-  assistantId?: string;
-  createdAt?: string;
-  provider?: string;
+  price: {
+    amount: number;
+    currency: string;
+  };
 }
 
-export function PhoneNumberSelector({ 
-  onSelect, 
-  country = 'US', 
-  type = 'local' 
-}: PhoneNumberSelectorProps) {
+interface PurchaseConfirmation {
+  number: AvailableNumber;
+  isOpen: boolean;
+}
+
+export function PhoneNumberSelector() {
   const { setNumber, setStep } = useDeploymentStore()
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [numbers, setNumbers] = useState<PhoneNumber[]>([])
-  const [existingNumbers, setExistingNumbers] = useState<ExistingPhoneNumber[]>([])
-  const [selectedNumber, setSelectedNumber] = useState<PhoneNumber | null>(null)
-  const [showPurchaseConfirm, setShowPurchaseConfirm] = useState(false)
-  const [currentCountry, setCurrentCountry] = useState(country)
-  const [currentType, setCurrentType] = useState(type)
+  const [availableNumbers, setAvailableNumbers] = useState<(PhoneNumber | AvailableNumber)[]>([])
   const [showExisting, setShowExisting] = useState(false)
-  const fetchController = React.useRef<AbortController | null>(null)
-  const [assistants, setAssistants] = useState<Assistant[]>([])
-  const [selectedAssistant, setSelectedAssistant] = useState<string | null>(null)
-  const [loadingAssistants, setLoadingAssistants] = useState(true)
-  const [selectedExistingNumber, setSelectedExistingNumber] = useState<ExistingPhoneNumber | null>(null)
+  const [initialFetchDone, setInitialFetchDone] = useState(false)
+  const [searchParams, setSearchParams] = useState({
+    country: 'US',
+    type: 'local',
+    areaCode: '',
+    contains: ''
+  })
+  const [purchaseConfirmation, setPurchaseConfirmation] = useState<PurchaseConfirmation>({
+    number: null,
+    isOpen: false
+  });
 
-  // Fetch existing numbers
-  useEffect(() => {
-    const fetchExistingNumbers = async () => {
-      try {
-        const response = await fetch('/api/phone-numbers/list')
-        const result = await response.json()
-        if (result.success) {
-          setExistingNumbers(result.data)
-        }
-      } catch (err) {
-        console.error('Error fetching existing numbers:', err)
-      }
-    }
-    fetchExistingNumbers()
-  }, [])
-
-  // Fetch assistants
-  useEffect(() => {
-    const fetchAssistants = async () => {
-      try {
-        setLoadingAssistants(true)
-        const response = await fetch('/api/vapi/assistants')
-        const result = await response.json()
-        if (result.success) {
-          setAssistants(result.assistants)
-        }
-      } catch (err) {
-        console.error('Error fetching assistants:', err)
-      } finally {
-        setLoadingAssistants(false)
-      }
-    }
-
-    fetchAssistants()
-  }, [])
-
-  const fetchNumbers = async (abortSignal?: AbortSignal) => {
-    if (fetchController.current) {
-      fetchController.current.abort()
-    }
-    
-    fetchController.current = new AbortController()
-    const signal = abortSignal || fetchController.current.signal
-
+  const searchAvailableNumbers = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
-      setSelectedNumber(null)
-      setShowPurchaseConfirm(false)
+      setLoading(true);
+      setError(null);
+      
+      const queryParams = new URLSearchParams({
+        country: searchParams.country,
+        type: searchParams.type,
+        ...(searchParams.areaCode && { areaCode: searchParams.areaCode }),
+        ...(searchParams.contains && { contains: searchParams.contains })
+      });
 
-      const response = await fetch(
-        `/api/available-numbers?country=${currentCountry}&type=${currentType}&limit=10`,
-        { signal }
-      )
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch numbers')
-      }
-      
-      const result = await response.json()
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch numbers')
-      }
+      const response = await fetch(`/api/available-numbers?${queryParams}`);
+      const result = await response.json();
 
-      setNumbers(result.data || [])
+      if (result.success && result.data) {
+        setAvailableNumbers(result.data);
+      } else {
+        setError(result.error || 'Failed to fetch available numbers');
+      }
     } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        console.error('Error fetching numbers:', err)
-        setError(err.message)
-      }
+      setError('Failed to search for numbers');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, [searchParams]);
+
+  const fetchExistingNumbers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/phone-numbers/list');
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setAvailableNumbers(result.data);
+      } else {
+        setError(result.error || 'Failed to fetch existing numbers');
+      }
+    } catch (err) {
+      setError('Failed to fetch existing numbers');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchNumbers()
-    return () => {
-      if (fetchController.current) {
-        fetchController.current.abort()
+    const fetchNumbers = async () => {
+      if (!initialFetchDone) {
+        if (showExisting) {
+          await fetchExistingNumbers();
+        } else {
+          await searchAvailableNumbers();
+        }
+        setInitialFetchDone(true);
       }
-    }
-  }, [currentCountry, currentType])
+    };
+    
+    fetchNumbers();
+  }, [showExisting, searchAvailableNumbers, fetchExistingNumbers, initialFetchDone]);
 
-  const handleAssignNumber = async (number: ExistingPhoneNumber) => {
+  useEffect(() => {
+    setInitialFetchDone(false);
+  }, [searchParams, showExisting]);
+
+  const handleAssignNumber = async (number: PhoneNumber) => {
     try {
       setLoading(true);
       setError(null);
 
-      // First create the assistant with the business config
       const assistantResponse = await fetch('/api/deploy/assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -184,18 +147,19 @@ export function PhoneNumberSelector({
         throw new Error(assistantResult.error || 'Failed to create assistant');
       }
 
-      // Store the assistant ID
-      useDeploymentStore.getState().setAssistantId(assistantResult.data.id);
+      const assistantId = assistantResult.data.id;
+      useDeploymentStore.getState().setAssistantId(assistantId);
 
-      // Set the number in store first (this will be used in deployment)
       setNumber({
-        number: number.phoneNumber,
-        location: `${number.locality}, ${number.region}`
+        id: number.id,
+        number: number.number,
+        location: number.locality && number.region 
+          ? `${number.locality}, ${number.region}`
+          : 'Unknown location'
       });
 
-      // Move to deploy step - the actual number update will happen during deployment
       setStep('deploy');
-
+      
     } catch (err) {
       console.error('Error assigning number:', err);
       setError(err instanceof Error ? err.message : 'Failed to assign number');
@@ -204,383 +168,348 @@ export function PhoneNumberSelector({
     }
   };
 
-  const handlePurchaseNumber = async () => {
-    if (!selectedNumber) {
-      setError('Please select a number first');
-      return;
-    }
+  const handlePurchaseClick = (number: AvailableNumber) => {
+    setPurchaseConfirmation({
+      number,
+      isOpen: true
+    });
+  };
 
+  const handlePurchaseNumber = async (number: AvailableNumber) => {
     try {
       setLoading(true);
       setError(null);
 
-      // First create the assistant
-      const assistantResponse = await fetch('/api/deploy/assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(useDeploymentStore.getState().businessConfig)
-      });
-
-      const assistantResult = await assistantResponse.json();
-      
-      if (!assistantResult.success) {
-        throw new Error(assistantResult.error || 'Failed to create assistant');
-      }
-
-      // Store the assistant ID
-      useDeploymentStore.getState().setAssistantId(assistantResult.data.id);
-
-      // Purchase the number
       const purchaseResponse = await fetch('/api/purchase-number', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          number: selectedNumber.phoneNumber
+          phoneNumber: number.phoneNumber,
+          country: number.country,
+          areaCode: searchParams.areaCode || number.phoneNumber.slice(2, 5)
         })
       });
 
       const purchaseResult = await purchaseResponse.json();
-
+      
       if (!purchaseResult.success) {
         throw new Error(purchaseResult.error || 'Failed to purchase number');
       }
 
-      // Set the number in store
       setNumber({
-        number: selectedNumber.phoneNumber,
-        location: `${selectedNumber.locality}, ${selectedNumber.region}`
+        id: purchaseResult.data.id,
+        number: number.phoneNumber,
+        location: `${number.locality}, ${number.region}`
       });
 
-      // Move to deploy step - the number will be updated with assistant ID during deployment
       setStep('deploy');
-
+      
     } catch (err) {
-      console.error('Purchase error:', err);
       setError(err instanceof Error ? err.message : 'Failed to purchase number');
     } finally {
       setLoading(false);
+      setPurchaseConfirmation({ number: null, isOpen: false });
     }
   };
 
-  return (
-    <div className="space-y-8">
-      {/* Info Banner */}
-      <div className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-100">
-        <h3 className="text-lg font-semibold mb-2">Phone Number Selection</h3>
-        <p className="text-gray-600">
-          Choose a phone number for your AI assistant. This number will be used for:
-        </p>
-        <ul className="mt-2 space-y-1 text-gray-600">
-          <li className="flex items-center">
-            <i className="fas fa-check text-green-500 mr-2" />
-            Incoming customer calls
-          </li>
-          <li className="flex items-center">
-            <i className="fas fa-check text-green-500 mr-2" />
-            Automated responses
-          </li>
-          <li className="flex items-center">
-            <i className="fas fa-check text-green-500 mr-2" />
-            Call forwarding when needed
-          </li>
-        </ul>
-      </div>
+  const PurchaseConfirmationModal = () => {
+    if (!purchaseConfirmation.isOpen || !purchaseConfirmation.number) return null;
 
-      {/* Controls */}
-      <div className="flex flex-col space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <select 
-              value={currentCountry}
-              onChange={(e) => setCurrentCountry(e.target.value)}
-              className="boxy-input min-w-[150px]"
-            >
-              <option value="US">United States</option>
-              <option value="CA">Canada</option>
-              <option value="GB">United Kingdom</option>
-            </select>
+    const number = purchaseConfirmation.number;
 
-            <select 
-              value={currentType}
-              onChange={(e) => setCurrentType(e.target.value as 'local' | 'tollfree')}
-              className="boxy-input min-w-[150px]"
-            >
-              <option value="local">Local Number</option>
-              <option value="tollfree">Toll Free Number</option>
-            </select>
-
-            <button 
-              onClick={() => fetchNumbers()}
-              className="boxy-button-ghost"
-              disabled={loading}
-            >
-              <i className={`fas fa-sync-alt ${loading ? 'animate-spin' : ''}`} />
-            </button>
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={SPRING}
+          className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 overflow-hidden"
+        >
+          {/* Header */}
+          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+            <h3 className="text-xl font-semibold text-white">Confirm Purchase</h3>
           </div>
 
-          <button
-            onClick={() => setShowExisting(!showExisting)}
-            className="boxy-button-ghost"
-          >
-            {showExisting ? 'Show Available' : 'Show Existing'}
-            <i className={`fas fa-chevron-${showExisting ? 'up' : 'down'} ml-2`} />
-          </button>
-        </div>
+          {/* Content */}
+          <div className="p-6 space-y-6">
+            {/* Number Details */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-mono text-gray-900">{number.phoneNumber}</p>
+                  <p className="text-sm text-gray-500">{number.locality}, {number.region}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-semibold text-gray-900">
+                    ${number.price.amount.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-500">per month</p>
+                </div>
+              </div>
 
-        {error && (
-          <div className="p-4 border-[3px] border-red-500 bg-red-50 text-red-600 rounded-lg">
-            <div className="flex">
-              <i className="fas fa-exclamation-circle mt-1" />
-              <div className="ml-3">{error}</div>
+              {/* Capabilities */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Features</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <CheckCircleIcon className={`w-4 h-4 mr-2 ${number.capabilities.voice ? 'text-green-500' : 'text-gray-400'}`} />
+                    Voice Calls
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <CheckCircleIcon className={`w-4 h-4 mr-2 ${number.capabilities.sms ? 'text-green-500' : 'text-gray-400'}`} />
+                    SMS
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <CheckCircleIcon className={`w-4 h-4 mr-2 ${number.capabilities.mms ? 'text-green-500' : 'text-gray-400'}`} />
+                    MMS
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-yellow-400 mt-0.5 mr-3" />
+                  <div>
+                    <h4 className="text-sm font-medium text-yellow-800">Important Note</h4>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      This number will be billed monthly and can be cancelled at any time. Additional charges may apply for usage beyond included limits.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end space-x-4 pt-4 border-t">
+              <button
+                onClick={() => setPurchaseConfirmation({ number: null, isOpen: false })}
+                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handlePurchaseNumber(number)}
+                disabled={loading}
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center"
+              >
+                {loading ? (
+                  <>
+                    <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCartIcon className="w-4 h-4 mr-2" />
+                    Purchase Number
+                  </>
+                )}
+              </button>
             </div>
           </div>
-        )}
+        </motion.div>
+      </div>
+    );
+  };
+
+  const renderNumberCard = (number: AvailableNumber) => (
+    <motion.button
+      key={number.phoneNumber}
+      onClick={() => handlePurchaseClick(number)}
+      className="group p-6 text-left bg-white rounded-xl border-2 border-gray-200 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow"
+      whileHover={{ scale: 1.02 }}
+      transition={SPRING}
+    >
+      <div className="flex items-start gap-4">
+        <div className="w-12 h-12 flex-shrink-0 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+          <PhoneIcon className="w-6 h-6 text-purple-600" />
+        </div>
+        <div className="flex-grow">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">{number.friendlyName}</h3>
+              <p className="text-gray-600 font-mono">{number.phoneNumber}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-900">
+                ${number.price?.amount?.toFixed(2) || '0.00'} {number.price?.currency || 'USD'}
+              </p>
+              <p className="text-xs text-gray-500">per month</p>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+            <GlobeAmericasIcon className="w-4 h-4" />
+            <span>{number.locality}, {number.region}</span>
+          </div>
+        </div>
+      </div>
+    </motion.button>
+  );
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Tab Selection */}
+      <div className="flex justify-center space-x-4 p-1 bg-gray-100 rounded-lg">
+        <button
+          onClick={() => setShowExisting(false)}
+          className={`flex items-center px-6 py-3 rounded-lg transition-all duration-200 ${
+            !showExisting 
+              ? 'bg-white shadow text-purple-600' 
+              : 'text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          <BuildingOfficeIcon className="w-5 h-5 mr-2" />
+          Purchase New Number
+        </button>
+        <button
+          onClick={() => setShowExisting(true)}
+          className={`flex items-center px-6 py-3 rounded-lg transition-all duration-200 ${
+            showExisting 
+              ? 'bg-white shadow text-purple-600' 
+              : 'text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          <PhoneIcon className="w-5 h-5 mr-2" />
+          Use Existing Number
+        </button>
       </div>
 
-      {/* Number Lists */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={SPRING}
-        className="space-y-4"
-      >
+      {/* Search Form for New Numbers */}
+      {!showExisting && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={SPRING}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+              <select
+                value={searchParams.country}
+                onChange={(e) => setSearchParams(prev => ({ ...prev, country: e.target.value }))}
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+              >
+                <option value="US">United States</option>
+                <option value="CA">Canada</option>
+                <option value="GB">United Kingdom</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Number Type</label>
+              <select
+                value={searchParams.type}
+                onChange={(e) => setSearchParams(prev => ({ ...prev, type: e.target.value }))}
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+              >
+                <option value="local">Local</option>
+                <option value="tollfree">Toll Free</option>
+                <option value="mobile">Mobile</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Area Code</label>
+              <input
+                type="text"
+                value={searchParams.areaCode}
+                onChange={(e) => setSearchParams(prev => ({ ...prev, areaCode: e.target.value }))}
+                placeholder="e.g., 415"
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Contains</label>
+              <input
+                type="text"
+                value={searchParams.contains}
+                onChange={(e) => setSearchParams(prev => ({ ...prev, contains: e.target.value }))}
+                placeholder="e.g., 1234"
+                className="w-full rounded-lg border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+              />
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={searchAvailableNumbers}
+              disabled={loading}
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+            >
+              {loading ? (
+                <ArrowPathIcon className="w-5 h-5 mr-2 animate-spin" />
+              ) : (
+                <MagnifyingGlassIcon className="w-5 h-5 mr-2" />
+              )}
+              Search Numbers
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Results Section */}
+      <div className="space-y-4">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin" />
           </div>
-        ) : showExisting ? (
-          // Existing Numbers
-          <div className="grid gap-4">
-            {existingNumbers.map(number => (
-              <motion.button
-                key={number.phoneNumber}
-                className={`p-6 text-left transition-all duration-200 rounded-lg w-full
-                         ${selectedExistingNumber?.phoneNumber === number.phoneNumber 
-                           ? 'border-[3px] border-purple-600 bg-purple-50' 
-                           : 'border-[3px] border-gray-200 hover:border-purple-300'}`}
-                onClick={() => handleAssignNumber(number)}
-                whileHover={{ scale: 1.02 }}
-                transition={SPRING}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold">{number.phoneNumber}</h3>
-                    <p className="text-sm text-gray-600">{number.friendlyName}</p>
-                    {number.assistantId && (
-                      <p className="text-xs text-gray-500">Assistant ID: {number.assistantId}</p>
-                    )}
-                  </div>
-                  <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                    {number.status || 'Active'}
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-3">
-                  {number.capabilities?.voice && (
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
-                      Voice
-                    </span>
-                  )}
-                  {number.capabilities?.SMS && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                      SMS
-                    </span>
-                  )}
-                  {number.capabilities?.MMS && (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                      MMS
-                    </span>
-                  )}
-                </div>
-                {number.createdAt && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Created: {new Date(number.createdAt).toLocaleDateString()}
-                  </p>
-                )}
-              </motion.button>
-            ))}
+        ) : error ? (
+          <div className="text-center py-8">
+            <div className="inline-flex items-center px-4 py-2 rounded-lg bg-red-50 text-red-700">
+              <span>{error}</span>
+            </div>
           </div>
-        ) : (
-          // Available Numbers
+        ) : showExisting ? (
           <div className="grid gap-4">
-            {numbers.map(number => (
+            {availableNumbers.map((number: PhoneNumber) => (
               <motion.button
-                key={number.phoneNumber}
-                className={`p-6 text-left transition-all duration-200 rounded-lg
-                         ${selectedNumber?.phoneNumber === number.phoneNumber 
-                           ? 'border-[3px] border-purple-600 bg-purple-50' 
-                           : 'border-[3px] border-gray-200 hover:border-purple-300'}`}
-                onClick={() => {
-                  setSelectedNumber(number)
-                  setShowPurchaseConfirm(true)
-                }}
+                key={number.id || number.number}
+                onClick={() => handleAssignNumber(number)}
+                className="group p-6 text-left bg-white rounded-xl border-2 border-gray-200 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow"
                 whileHover={{ scale: 1.02 }}
                 transition={SPRING}
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 border-2 border-purple-600 rounded-full flex items-center justify-center">
-                    <i className="fas fa-phone text-purple-600" />
+                  <div className="w-12 h-12 flex-shrink-0 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                    <PhoneIcon className="w-6 h-6 text-purple-600" />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <div>
-                        <h4 className="font-bold text-gray-900">{number.phoneNumber}</h4>
-                        <p className="text-sm text-gray-600">
-                          {number.locality} {number.region && `• ${number.region}`}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-purple-600">
-                          {number.pricing.priceUnit} {number.pricing.currentPrice}
-                          <span className="text-sm font-normal text-gray-600">/month</span>
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {number.pricing.additionalInfo.voiceOutbound}/min calls
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-3">
-                      {number.capabilities?.voice && (
-                        <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
-                          Voice
-                        </span>
-                      )}
-                      {number.capabilities?.SMS && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                          SMS
-                        </span>
-                      )}
-                      {number.capabilities?.MMS && (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                          MMS
-                        </span>
-                      )}
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">{number.name || 'Unnamed Number'}</h3>
+                    <p className="text-gray-600 font-mono">{number.number}</p>
+                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                      <GlobeAmericasIcon className="w-4 h-4" />
+                      <span>{number.provider}</span>
                     </div>
                   </div>
                 </div>
               </motion.button>
             ))}
           </div>
+        ) : (
+          <div className="grid gap-4">
+            {(availableNumbers as AvailableNumber[]).map((number) => 
+              number && 'phoneNumber' in number ? renderNumberCard(number) : null
+            )}
+          </div>
         )}
-      </motion.div>
-
-      {/* Purchase Confirmation Modal */}
-      {showPurchaseConfirm && selectedNumber && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <motion.div
-            className="bg-white rounded-xl p-6 max-w-md w-full"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={SPRING}
-          >
-            <h3 className="text-xl font-bold mb-4">Confirm Purchase</h3>
-            
-            <div className="space-y-6">
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <h4 className="text-xl font-semibold">{selectedNumber.phoneNumber}</h4>
-                <p className="text-sm text-gray-600">
-                  {selectedNumber.locality} {selectedNumber.region && `• ${selectedNumber.region}`}
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <h5 className="font-semibold text-gray-900">Pricing Details</h5>
-                <div className="space-y-2">
-                  <div className="flex justify-between py-2 border-b">
-                    <span>Monthly Number Rental</span>
-                    <span className="font-semibold">
-                      {selectedNumber.pricing.priceUnit} {selectedNumber.pricing.currentPrice}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span>Voice Calls (Outbound)</span>
-                    <span>{selectedNumber.pricing.priceUnit} {selectedNumber.pricing.additionalInfo.voiceOutbound}/min</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span>Voice Calls (Inbound)</span>
-                    <span>{selectedNumber.pricing.priceUnit} {selectedNumber.pricing.additionalInfo.voiceInbound}/min</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span>SMS (Outbound)</span>
-                    <span>{selectedNumber.pricing.priceUnit} {selectedNumber.pricing.additionalInfo.smsOutbound}/msg</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span>SMS (Inbound)</span>
-                    <span>{selectedNumber.pricing.priceUnit} {selectedNumber.pricing.additionalInfo.smsInbound}/msg</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-sm">
-                <div className="font-medium text-yellow-800">Important Note:</div>
-                <p className="mt-1 text-yellow-700">
-                  These charges will be billed to your Twilio account. Additional usage charges may apply.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Select Assistant
-                </label>
-                <select
-                  className="boxy-input w-full"
-                  value={selectedAssistant || ''}
-                  onChange={(e) => setSelectedAssistant(e.target.value)}
-                  disabled={loadingAssistants}
-                >
-                  <option value="">Select an assistant...</option>
-                  {assistants.map((assistant) => (
-                    <option key={assistant.id} value={assistant.id}>
-                      {assistant.name} ({assistant.type})
-                    </option>
-                  ))}
-                </select>
-                {loadingAssistants && (
-                  <p className="text-sm text-gray-500">Loading assistants...</p>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  className="flex-1 boxy-button"
-                  onClick={() => {
-                    setShowPurchaseConfirm(false)
-                    setSelectedNumber(null)
-                    setSelectedAssistant(null)
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="flex-1 boxy-button-filled"
-                  onClick={handlePurchaseNumber}
-                  disabled={loading || !selectedAssistant}
-                >
-                  {loading ? (
-                    <span className="flex items-center">
-                      <i className="fas fa-spinner fa-spin mr-2" />
-                      Processing...
-                    </span>
-                  ) : (
-                    'Purchase Number'
-                  )}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      </div>
 
       {/* Navigation */}
       <div className="flex justify-between pt-6">
         <button 
           onClick={() => setStep('voice')}
-          className="boxy-button"
+          className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
           disabled={loading}
         >
-          <i className="fas fa-arrow-left mr-2" />
           Back
         </button>
       </div>
+
+      {/* Add the confirmation modal */}
+      <PurchaseConfirmationModal />
     </div>
   )
 } 

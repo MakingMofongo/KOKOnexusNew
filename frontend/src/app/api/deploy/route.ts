@@ -1,32 +1,18 @@
-import { BusinessDeploymentService } from '@backend/services/businessDeploymentService'
-import { AssistantService } from '@backend/services/assistantService'
-import { PhoneNumberService } from '@backend/services/phoneNumberService'
-import { BusinessConfig } from '@backend/types/business'
-
-const assistantService = new AssistantService(process.env.VAPI_API_KEY!)
-const phoneNumberService = new PhoneNumberService(process.env.VAPI_API_KEY!)
-const deploymentService = new BusinessDeploymentService(
-  assistantService,
-  phoneNumberService
-)
+import { NextResponse } from 'next/server';
+import { handleDeployment } from '@backend/serverless/handlers/deployment';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const { config } = body as { config: BusinessConfig }
-
-    const result = await deploymentService.deployBusinessAssistant(config)
-
-    return new Response(JSON.stringify(result), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 200
-    })
-
+    const result = await handleDeployment(req.clone());
+    return result;
   } catch (error) {
-    console.error('Deployment error:', error)
-    return new Response(
-      JSON.stringify({ error: 'Deployment failed' }), 
+    console.error('Error in deployment route:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Internal server error'
+      },
       { status: 500 }
-    )
+    );
   }
 } 

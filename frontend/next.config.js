@@ -15,12 +15,10 @@ const nextConfig = {
             },
         ],
     },
-    // Add path aliases
     webpack: (config) => {
         config.resolve.alias = {
             ...config.resolve.alias,
             '@backend': path.join(__dirname, '../backend/src')
-            
         }
         return config
     },
@@ -46,7 +44,13 @@ const nextConfig = {
                 ],
             },
         ]
-    }
+    },
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '2mb'
+        }
+    },
+    transpilePackages: ['@backend']
 }
 
 module.exports = nextConfig

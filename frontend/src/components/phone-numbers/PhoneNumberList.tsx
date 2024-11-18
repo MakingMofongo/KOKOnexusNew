@@ -1,7 +1,25 @@
 import { useEffect, useState } from 'react';
-import { PhoneNumber } from '@/types/phoneNumber';
-import { PhoneNumberService } from '@/services/phoneNumberService';
-import { VAPI_TOKEN } from '@/config';
+
+interface PhoneNumber {
+  id: string;
+  orgId: string;
+  assistantId?: string;
+  number: string;
+  createdAt: string;
+  updatedAt: string;
+  twilioAccountSid?: string;
+  twilioAuthToken?: string;
+  name?: string;
+  provider: string;
+}
+
+interface PhoneNumberResponse {
+  success: boolean;
+  data: {
+    success: boolean;
+    data: PhoneNumber[];
+  };
+}
 
 export default function PhoneNumberList() {
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([]);
@@ -11,16 +29,17 @@ export default function PhoneNumberList() {
   useEffect(() => {
     const fetchPhoneNumbers = async () => {
       try {
-        const service = new PhoneNumberService(VAPI_TOKEN);
-        const result = await service.listPhoneNumbers({ limit: 100 });
-
-        if (result.success && result.data) {
-          setPhoneNumbers(result.data);
+        const response = await fetch('/api/test');
+        const result: PhoneNumberResponse = await response.json();
+        
+        if (result.success && result.data.success) {
+          setPhoneNumbers(result.data.data);
         } else {
-          setError(result.error || 'Failed to fetch phone numbers');
+          setError('Failed to fetch phone numbers');
         }
-      } catch (err) {
-        setError('An error occurred while fetching phone numbers');
+      } catch (error) {
+        console.error('Error fetching numbers:', error);
+        setError(error instanceof Error ? error.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
@@ -30,54 +49,49 @@ export default function PhoneNumberList() {
   }, []);
 
   if (loading) {
-    return <div>Loading phone numbers...</div>;
+    return <div className="text-center py-4">Loading phone numbers...</div>;
   }
 
   if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
-  }
-
-  if (phoneNumbers.length === 0) {
-    return <div>No phone numbers found</div>;
+    return <div className="text-red-500 text-center py-4">{error}</div>;
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Phone Numbers</h2>
-      <div className="grid gap-4">
-        {phoneNumbers.map((number) => (
-          <div
-            key={number.id}
-            className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-medium">
-                  {number.name || 'Unnamed'} ({number.phoneNumber})
-                </h3>
-                <p className="text-sm text-gray-500">ID: {number.id}</p>
-                {number.assistantId && (
-                  <p className="text-sm text-gray-500">
-                    Assistant: {number.assistantId}
+    <div className="bg-white shadow rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+          Existing Phone Numbers ({phoneNumbers.length})
+        </h3>
+        {phoneNumbers.length === 0 ? (
+          <p className="text-gray-500">No phone numbers found.</p>
+        ) : (
+          phoneNumbers.map((number) => (
+            <div
+              key={number.id}
+              className="border rounded-lg p-4 mb-4 last:mb-0 hover:bg-gray-50"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-medium text-gray-900">
+                    {number.name || 'Unnamed Number'}
+                  </h4>
+                  <p className="text-gray-600 mt-1 font-mono">
+                    {number.number}
                   </p>
-                )}
+                  {number.assistantId && (
+                    <p className="text-sm text-gray-500">
+                      Assistant: {number.assistantId}
+                    </p>
+                  )}
+                </div>
               </div>
-              <span
-                className={`px-2 py-1 text-xs rounded-full ${
-                  number.status === 'active'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                {number.status}
-              </span>
+              <div className="mt-2 text-sm text-gray-600">
+                <p>Provider: {number.provider}</p>
+                <p>Created: {new Date(number.createdAt).toLocaleDateString()}</p>
+              </div>
             </div>
-            <div className="mt-2 text-sm text-gray-600">
-              <p>Provider: {number.provider}</p>
-              <p>Created: {new Date(number.createdAt).toLocaleDateString()}</p>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

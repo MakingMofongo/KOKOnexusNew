@@ -12,11 +12,8 @@ import { SPRING } from '@/lib/constants/animations'
 
 export default function DeployPage() {
   const step = useDeploymentStore(state => state.step)
-  const setNumber = useDeploymentStore(state => state.setNumber)
 
-  const handleNumberSelect = (number: string) => {
-    setNumber({ number, location: '' }) // Update with proper location if available
-  }
+  console.log('DeployPage render:', { step })
 
   const renderStep = () => {
     switch (step) {
@@ -25,8 +22,9 @@ export default function DeployPage() {
       case 'voice':
         return <VoiceSelector />
       case 'number':
-        return <PhoneNumberSelector onSelect={handleNumberSelect} />
+        return <PhoneNumberSelector />
       case 'deploy':
+        console.log('Rendering DeploymentSummary')
         return <DeploymentSummary />
       default:
         return <TemplateSelector />
@@ -36,7 +34,8 @@ export default function DeployPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <DeploymentProgress />
+        {/* Only show progress bar if not in deploy step */}
+        {step !== 'deploy' && <DeploymentProgress />}
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}

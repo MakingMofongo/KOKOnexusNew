@@ -4,7 +4,7 @@ import { PhoneNumber } from './phoneNumber';
 // Core business configuration
 export interface BusinessConfig {
   businessName: string;
-  industry: 'retail' | 'healthcare' | 'hospitality' | 'technology';
+  industry: string;
   size: 'small' | 'medium' | 'enterprise';
   region: string;
   expectedCallVolume: number;
@@ -15,18 +15,40 @@ export interface BusinessConfig {
       hours: string;
     }>;
   };
-  complianceRequirements?: string[];
   languages: string[];
   tone: 'professional' | 'friendly' | 'casual';
+  customPrompts?: Array<{ role: string; content: string }>;
+  voiceId?: string;
+  settings?: {
+    recordCalls?: boolean;
+    transcribeCalls?: boolean;
+    analyticsEnabled?: boolean;
+  };
 }
 
 // Deployment result
 export interface DeploymentResult {
-  assistant: Assistant;
-  phoneNumber: PhoneNumber;
-  analytics: AnalyticsConfig;
-  quickStartGuide: QuickStartGuide;
-  estimatedCosts: CostBreakdown;
+  success: boolean;
+  assistant: {
+    id: string;
+    name: string;
+    phoneNumber?: string;
+  };
+  phoneNumber: {
+    id: string;
+    number: string;
+  };
+  analytics?: AnalyticsConfig;
+  quickStartGuide: {
+    setup: Array<{
+      description: string;
+    }>;
+  };
+  estimatedCosts: {
+    monthly: number;
+    perCall: number;
+  };
+  error?: string;
 }
 
 // Analytics configuration

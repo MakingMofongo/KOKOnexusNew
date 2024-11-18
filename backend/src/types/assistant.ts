@@ -215,7 +215,7 @@ export interface UpdateAssistantDto extends Omit<Vapi.UpdateAssistantDto, 'trans
 export type UpdateAssistantPayload = UpdateAssistantDto;
 
 export type VapiAssistantProvider = 'vapi' | 'openai' | 'anthropic' | 'google' | 'groq' | 'anyscale' | 'deepinfra' | 'perplexity' | 'together' | 'openrouter';
-export type VapiVoiceProvider = 'azure' | 'cartesia' | '11labs' | 'deepgram' | 'lmnt' | 'neets' | 'openai' | 'playht' | 'rime' | 'tavus';
+export type VapiVoiceProvider = 'cartesia' | '11labs' | 'rime-ai';
 export type VapiBackgroundSound = 'off' | 'office';
 export type VapiFirstMessageMode = 'assistant-speaks-first' | 'assistant-speaks-first-with-model-generated-message' | 'assistant-waits-for-user';
 

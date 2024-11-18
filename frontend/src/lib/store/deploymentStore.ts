@@ -13,8 +13,9 @@ interface DeploymentState {
     name: string
   } | null
   selectedNumber: {
-    number: string
-    location: string
+    id: string;
+    number: string;
+    location: string;
   } | null
   deploymentResult: DeploymentResult | null
   isDeploying: boolean
@@ -113,11 +114,15 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
 
       // After successful deployment, update the phone number with the assistant ID
       if (state.selectedNumber && state.businessConfig.assistantId) {
-        const updateResponse = await fetch(`/api/phone-numbers/${state.selectedNumber.number}/update`, {
+        const updateResponse = await fetch('/api/phone-numbers/update', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            assistantId: state.businessConfig.assistantId
+            id: state.selectedNumber.id,
+            updates: {
+              assistantId: state.businessConfig.assistantId,
+              name: config.businessName || 'AI Assistant Line'
+            }
           })
         });
 

@@ -1,5 +1,5 @@
 import { API_BASE } from './config'
-import type { AssistantConfig, AssistantResponse } from '@/types/assistant'
+import type { VapiAssistantConfig as AssistantConfig, AssistantResponse } from '@backend/types/assistant'
 
 export const assistantApi = {
   create: async (config: AssistantConfig): Promise<AssistantResponse> => {

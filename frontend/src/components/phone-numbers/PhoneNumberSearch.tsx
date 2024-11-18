@@ -1,34 +1,38 @@
 import { useState } from 'react';
-import { PhoneNumberService } from '@/services/phoneNumberService';
-import { VAPI_TOKEN } from '@/config';
+import type { AvailableNumber } from '@backend/types/phoneNumber';
 
 export default function PhoneNumberSearch() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchParams, setSearchParams] = useState({
     country: 'US',
     type: 'local',
     areaCode: '',
     contains: ''
   });
+  const [numbers, setNumbers] = useState<AvailableNumber[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const searchNumbers = async () => {
     setLoading(true);
     setError(null);
-
     try {
-      const service = new PhoneNumberService(VAPI_TOKEN);
-      const result = await service.listAvailableNumbers(searchParams);
+      const queryParams = new URLSearchParams({
+        country: searchParams.country,
+        type: searchParams.type,
+        ...(searchParams.areaCode && { areaCode: searchParams.areaCode }),
+        ...(searchParams.contains && { contains: searchParams.contains })
+      });
+
+      const response = await fetch(`/api/phone-numbers/search?${queryParams}`);
+      const result = await response.json();
 
       if (result.success && result.data) {
-        setSearchResults(result.data);
+        setNumbers(result.data);
       } else {
-        setError(result.error || 'Failed to search phone numbers');
+        setError(result.error || 'Failed to search numbers');
       }
     } catch (err) {
-      setError('An error occurred while searching phone numbers');
+      setError('An error occurred while searching numbers');
     } finally {
       setLoading(false);
     }
@@ -41,7 +45,7 @@ export default function PhoneNumberSearch() {
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSearch} className="space-y-4">
+      <form onSubmit={searchNumbers} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Country</label>
@@ -109,11 +113,11 @@ export default function PhoneNumberSearch() {
         <div className="text-red-500 text-sm">{error}</div>
       )}
 
-      {searchResults.length > 0 && (
+      {numbers.length > 0 && (
         <div className="mt-6">
           <h3 className="text-lg font-medium text-gray-900">Available Numbers</h3>
           <div className="mt-4 grid gap-4">
-            {searchResults.map((number) => (
+            {numbers.map((number) => (
               <div
                 key={number.phoneNumber}
                 className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow"

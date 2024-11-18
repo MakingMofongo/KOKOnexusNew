@@ -1,5 +1,5 @@
 import { API_BASE } from './config'
-import type { CreatePhoneNumberConfig, PhoneNumberResponse } from '../../../../backend/src/types/phoneNumber'
+import type { CreatePhoneNumberConfig, PhoneNumberResponse } from '@backend/types/phoneNumber'
 
 export const phoneNumberApi = {
   list: async () => {

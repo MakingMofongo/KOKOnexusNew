@@ -39,7 +39,22 @@ export class PhoneNumberService {
     areaCode?: string;
     contains?: string;
     limit?: number;
-  }) {
+  }): Promise<{
+    success: boolean;
+    data?: Array<{
+      phoneNumber: string;
+      friendlyName: string;
+      locality: string;
+      region: string;
+      country: string;
+      capabilities: {
+        voice: boolean;
+        SMS: boolean;
+        MMS: boolean;
+      }
+    }>;
+    error?: string;
+  }> {
     try {
       const twilioClient = this.getTwilioClient();
       const { country, type, areaCode, contains, limit = 20 } = options;
@@ -51,65 +66,43 @@ export class PhoneNumberService {
       };
 
       let numbers;
-      try {
-        switch (type) {
-          case 'local':
-            numbers = await twilioClient.availablePhoneNumbers(country)
-              .local.list(searchParams);
-            break;
-          case 'tollfree':
-            numbers = await twilioClient.availablePhoneNumbers(country)
-              .tollFree.list(searchParams);
-            break;
-          case 'mobile':
-            numbers = await twilioClient.availablePhoneNumbers(country)
-              .mobile.list(searchParams);
-            break;
-          default:
-            throw new Error('Invalid number type');
-        }
-
-        // Transform the response to match the expected format
-        const formattedNumbers = numbers.map(num => ({
-          phoneNumber: num.phoneNumber,
-          friendlyName: num.friendlyName,
-          locality: num.locality || '',
-          region: num.region || '',
-          country: num.isoCountry,
-          capabilities: {
-            voice: num.capabilities.voice || false,
-            sms: num.capabilities.sms || false,
-            mms: num.capabilities.mms || false
-          },
-          type: type,
-          price: {
-            amount: 0,
-            currency: 'USD'
-          }
-        }));
-
-        return {
-          success: true,
-          data: formattedNumbers
-        };
-
-      } catch (twilioError) {
-        console.error('Twilio API Error:', twilioError);
-        return {
-          success: false,
-          error: twilioError instanceof Error ? twilioError.message : 'Failed to fetch numbers from Twilio'
-        };
+      switch (type) {
+        case 'tollfree':
+          numbers = await twilioClient.availablePhoneNumbers(country)
+            .tollFree.list(searchParams);
+          break;
+        case 'mobile':
+          numbers = await twilioClient.availablePhoneNumbers(country)
+            .mobile.list(searchParams);
+          break;
+        default:
+          numbers = await twilioClient.availablePhoneNumbers(country)
+            .local.list(searchParams);
       }
 
+      return {
+        success: true,
+        data: numbers.map(number => ({
+          phoneNumber: number.phoneNumber,
+          friendlyName: number.friendlyName,
+          locality: number.locality || '',
+          region: number.region || '',
+          country: number.isoCountry,
+          capabilities: {
+            voice: number.capabilities.voice || false,
+            SMS: number.capabilities.sms || false,
+            MMS: number.capabilities.mms || false
+          }
+        }))
+      };
     } catch (error) {
-      console.error('Phone Service Error:', error);
+      console.error('Error listing numbers:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch available numbers'
+        error: error instanceof Error ? error.message : 'Failed to list numbers'
       };
     }
   }
-
 
   //List all phone numbers associated with the VAPI account
   async listPhoneNumbers(options?: ListPhoneNumbersOptions): Promise<PhoneNumberListResponse> {

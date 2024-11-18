@@ -1,21 +1,34 @@
 export interface PhoneNumber {
-  provider: string;
-  createdAt: string;
   id: string;
   orgId: string;
-  sipUri: string;
-  updatedAt: string;
-  assistantId?: string;
-  fallbackDestination?: {
-    type: string;
-    sipUri: string;
-    description?: string;
-    message?: string;
-  };
   name?: string;
-  serverUrl?: string;
-  serverUrlSecret?: string;
-  squadId?: string;
+  sipUri?: string;
+  number?: string;
+  provider: string;
+  assistantId?: string;
+  createdAt: string;
+  updatedAt: string;
+  isActive?: boolean;
+  twilioAccountSid?: string;
+  twilioAuthToken?: string;
+}
+
+export interface AvailableNumber {
+  phoneNumber: string;
+  friendlyName: string;
+  locality: string;
+  region: string;
+  country: string;
+  capabilities: {
+    voice: boolean;
+    sms: boolean;
+    mms: boolean;
+  };
+  type: 'local' | 'tollfree' | 'mobile';
+  price: {
+    amount: number;
+    currency: string;
+  };
 }
 
 export interface ListPhoneNumbersOptions {

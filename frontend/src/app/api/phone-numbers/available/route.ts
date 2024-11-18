@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PhoneNumberService } from '@/services/phoneNumberService';
-import { VAPI_TOKEN } from '@/config';
+import { PhoneNumberService } from '@backend/services/phoneNumberService';
+import { VAPI_TOKEN } from '@backend/config';
 
 const phoneNumberService = new PhoneNumberService(VAPI_TOKEN);
 
