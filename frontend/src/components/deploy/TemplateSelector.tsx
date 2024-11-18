@@ -90,6 +90,9 @@ export function TemplateSelector() {
   const [selectedSubtype, setSelectedSubtype] = useState<string | null>(null)
   const [showCustomization, setShowCustomization] = useState(false)
   const [customConfig, setCustomConfig] = useState({
+    businessName: '',
+    businessEmail: '',
+    businessPhone: '',
     industry: '',
     businessType: '',
     tone: 'professional',
@@ -98,7 +101,6 @@ export function TemplateSelector() {
       timezone: 'America/New_York',
       schedule: [{ days: ['MONDAY', 'FRIDAY'], hours: '9:00-17:00' }]
     },
-    languages: ['en'],
     specialServices: [],
     complianceRequirements: [],
     productCategories: [],
