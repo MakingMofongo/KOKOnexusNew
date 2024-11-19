@@ -18,12 +18,15 @@ export interface BusinessConfig {
   languages: string[];
   tone: 'professional' | 'friendly' | 'casual';
   customPrompts?: Array<{ role: string; content: string }>;
+  customInstructions?: string;
   voiceId?: string;
   settings?: {
     recordCalls?: boolean;
     transcribeCalls?: boolean;
     analyticsEnabled?: boolean;
   };
+  timezone?: string;
+  additionalInstructions?: string;
 }
 
 // Deployment result

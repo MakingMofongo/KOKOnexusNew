@@ -55,6 +55,30 @@ export class DefaultTemplate implements IndustryTemplate {
     return `Hello! I'm the virtual assistant for ${config.businessName}. How can I help you today?`;
   }
 
+  generateSystemMessage(config: BusinessConfig): string {
+    return `You are a customer service assistant for ${config.businessName}.
+    
+    Business Details:
+    - Industry: ${config.industry}
+    - Size: ${config.size}
+    - Region: ${config.region}
+    - Languages: ${config.languages.join(', ')}
+    - Tone: ${config.tone}
+    
+    Key Responsibilities:
+    1. Provide accurate information about business services
+    2. Handle customer inquiries professionally
+    3. Follow business hours: ${JSON.stringify(config.businessHours)}
+    4. Maintain the specified tone: ${config.tone}
+    5. Escalate complex issues appropriately
+    
+    Remember to:
+    - Be concise and clear in responses
+    - Stay within business policies
+    - Protect customer privacy
+    - Ask for clarification when needed`;
+  }
+
   protected generateBasePrompt(): string {
     const { businessName, tone, languages } = this.businessConfig;
     

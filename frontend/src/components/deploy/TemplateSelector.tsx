@@ -119,6 +119,33 @@ export function TemplateSelector() {
     setStep('voice')
   }
 
+  const handleTemplateSelect = (templateId: string, subtype: string) => {
+    const store = useDeploymentStore.getState()
+    
+    // Generate a more detailed system prompt
+    const systemPrompt = `You are an AI assistant for ${store.businessConfig.businessName || 'our business'}. 
+You specialize in ${templateId} services with a focus on ${subtype}.
+
+Key Responsibilities:
+- Handle customer inquiries professionally
+- Provide accurate information about our services
+- Schedule appointments and manage reservations
+- Address common questions and concerns
+- Escalate complex issues when necessary
+
+Primary language: ${store.languages.primary}
+Additional languages: ${store.languages.additional.join(', ')}
+Tone: ${store.businessConfig.tone || 'professional'}`
+
+    // Update both the template and system prompt
+    store.setSelectedTemplate(templateId)
+    store.updateBusinessConfig({ 
+      systemPrompt,
+      industry: templateId.split('-')[0] // Set the industry based on template
+    })
+    store.setStep('voice')
+  }
+
   if (showCustomization) {
     return (
       <div className="max-w-4xl mx-auto">

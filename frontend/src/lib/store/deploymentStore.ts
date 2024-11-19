@@ -5,12 +5,15 @@ import { PhoneNumber } from '@backend/types/phoneNumber'
 
 interface DeploymentState {
   step: 'template' | 'voice' | 'number' | 'deploy'
-  businessConfig: Partial<BusinessConfig> & { assistantId?: string }
+  businessConfig: Partial<BusinessConfig> & { assistantId?: string; systemPrompt?: string }
   selectedTemplate: string
   selectedVoice: {
     provider: string
     voiceId: string
     name: string
+    model?: string
+    stability?: number
+    similarityBoost?: number
   } | null
   selectedNumber: {
     id: string;
@@ -22,6 +25,7 @@ interface DeploymentState {
   error: string | null
   industry: string | null
   template: string | null
+  systemPrompt: string | null
   languages: {
     primary: string
     additional: string[]
@@ -50,6 +54,7 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
   error: null,
   industry: null,
   template: null,
+  systemPrompt: null,
   languages: {
     primary: 'en',
     additional: []
@@ -93,6 +98,18 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
         }
       }
 
+      // Ensure we have a system prompt
+      const systemPrompt = state.businessConfig.systemPrompt || `You are a helpful AI assistant for ${config.businessName}.
+You specialize in ${config.industry} services.
+Primary language: ${config.languages[0]}
+Tone: ${config.tone}
+
+Key Responsibilities:
+- Handle customer inquiries professionally
+- Provide accurate information about our services
+- Address common questions and concerns
+- Escalate complex issues when necessary`
+
       // Call backend deployment service
       const response = await fetch('/api/deploy', {
         method: 'POST',
@@ -101,7 +118,8 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
           config,
           template: state.selectedTemplate,
           voice: state.selectedVoice,
-          number: state.selectedNumber
+          number: state.selectedNumber,
+          systemPrompt // Include the system prompt in the request
         })
       })
 
@@ -148,6 +166,7 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
     error: null,
     industry: null,
     template: null,
+    systemPrompt: null,
     languages: {
       primary: 'en',
       additional: []

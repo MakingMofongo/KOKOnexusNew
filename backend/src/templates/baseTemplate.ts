@@ -30,19 +30,15 @@ export interface RecordingRules {
 }
 
 export interface IndustryTemplate {
-  // Core configuration methods
-  getBasePrompts(): Array<{ role: string; content: string }>;
-  getVoiceConfig(): VoiceConfig;
+  getBasePrompts(config: BusinessConfig): Array<{ role: string; content: string }>;
+  getVoiceConfig(config: BusinessConfig): VoiceConfig;
   getOptimalTemperature(): number;
   getOptimalTokens(): number;
   getAnalysisPlan(): AnalysisPlan;
-  generateGreeting(config: BusinessConfig): string;
-
-  // Business logic methods
-  handleCommonScenarios(): ScenarioHandling;
-  getComplianceRules(): ComplianceRules;
-  getBusinessHoursHandling(): BusinessHoursConfig;
+  generateSystemMessage(config: BusinessConfig): string;
+  getBusinessHoursHandling(config: BusinessConfig): BusinessHoursConfig;
   getFailoverBehavior(): FailoverConfig;
+  generateGreeting(config: BusinessConfig): string;
 }
 
 interface VoiceConfig {
@@ -72,18 +68,97 @@ interface AnalysisPlan {
   };
 }
 
-interface ScenarioHandling {
-  commonQueries: string[];
-  responses: Record<string, string>;
-  escalationTriggers: string[];
-  fallbackResponses: string[];
-}
+export class BaseTemplate implements IndustryTemplate {
+  protected businessConfig: BusinessConfig;
+  protected industryPrompt: string;
 
-interface ComplianceRules {
-  requiredDisclosures: string[];
-  restrictedPhrases: string[];
-  dataHandling: DataHandlingRules;
-  recordingRequirements: RecordingRules;
+  constructor(config: BusinessConfig, industryPrompt?: string) {
+    this.businessConfig = config;
+    this.industryPrompt = industryPrompt || '';
+  }
+
+  getBasePrompts() {
+    return [
+      {
+        role: "system",
+        content: this.generateSystemMessage(this.businessConfig)
+      }
+    ];
+  }
+
+  getVoiceConfig(config: BusinessConfig) {
+    return {
+      provider: "rime-ai",
+      voiceId: "neutral",
+      speed: 1.0,
+      chunkPlan: {
+        enabled: true,
+        minCharacters: 30
+      }
+    };
+  }
+
+  getOptimalTemperature(): number {
+    return 0.7;
+  }
+
+  getOptimalTokens(): number {
+    return 150;
+  }
+
+  getAnalysisPlan() {
+    return {
+      summaryPlan: {
+        enabled: true,
+        timeoutSeconds: 30
+      },
+      successEvaluationPlan: {
+        enabled: true,
+        rubric: "NumericScale" as const,
+        timeoutSeconds: 30
+      }
+    };
+  }
+
+  generateSystemMessage(config: BusinessConfig): string {
+    return `${this.industryPrompt}
+
+    Business Details:
+    - Name: ${config.businessName}
+    - Industry: ${config.industry}
+    - Region: ${config.region}
+    - Languages: ${config.languages.join(', ')}
+    - Tone: ${config.tone}
+    
+    ${config.additionalInstructions || ''}`;
+  }
+
+  generateGreeting(config: BusinessConfig): string {
+    return `Hello! Welcome to ${config.businessName}. How can I assist you today?`;
+  }
+
+  getBusinessHoursHandling(config: BusinessConfig): BusinessHoursConfig {
+    return {
+      timezone: config.timezone || 'UTC',
+      schedule: [
+        {
+          days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          hours: '9:00-17:00'
+        }
+      ]
+    };
+  }
+
+  getFailoverBehavior(): FailoverConfig {
+    return {
+      enabled: true,
+      maxAttempts: 3,
+      retryDelay: 1000,
+      fallbackMessage: "I'm currently experiencing difficulties. Please try again shortly."
+    };
+  }
+
+  // ... implement other required methods
 }
 
 // ... other interfaces 

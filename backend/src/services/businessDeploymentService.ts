@@ -69,9 +69,15 @@ export class BusinessDeploymentService {
         temperature: template.getOptimalTemperature(),
         maxTokens: template.getOptimalTokens(),
         emotionRecognitionEnabled: true,
-        messages: template.getBasePrompts()
+        messages: [
+          {
+            role: "system",
+            content: template.generateSystemMessage(config)
+          },
+          ...template.getBasePrompts(config)
+        ]
       },
-      voice: template.getVoiceConfig(),
+      voice: template.getVoiceConfig(config),
       analysisPlan: template.getAnalysisPlan()
     };
   }

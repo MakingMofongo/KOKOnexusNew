@@ -54,4 +54,22 @@ export class RetailTemplate extends DefaultTemplate {
       }
     };
   }
+
+  generateSystemMessage(config: BusinessConfig): string {
+    return `${super.generateSystemMessage(config)}
+    
+    Retail-Specific Guidelines:
+    1. Focus on product information and availability
+    2. Handle pricing and inventory inquiries accurately
+    3. Explain return/exchange policies clearly
+    4. Promote relevant loyalty programs
+    5. Process basic order status inquiries
+    
+    Key Retail Policies:
+    - Returns within 30 days
+    - Price matching available
+    - Loyalty program benefits
+    - Gift card services
+    - Special order options`;
+  }
 } 

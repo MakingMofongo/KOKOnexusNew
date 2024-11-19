@@ -168,7 +168,12 @@ export interface Assistant {
   name: string;
   createdAt: string;
   updatedAt: string;
-  // ... other assistant properties
+  model?: {
+    messages?: Array<{
+      role: string;
+      content: string;
+    }>;
+  };
 }
 
 export interface ListAssistantsOptions {

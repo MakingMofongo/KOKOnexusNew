@@ -83,7 +83,7 @@ const industrySpecificFields: Record<string, (config: any, setConfig: any) => Re
                     ...config,
                     complianceRequirements: e.target.checked
                       ? [...requirements, requirement]
-                      : requirements.filter(r => r !== requirement)
+                      : requirements.filter((r: string) => r !== requirement)
                   })
                 }}
               />

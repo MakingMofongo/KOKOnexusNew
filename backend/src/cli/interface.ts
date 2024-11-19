@@ -195,8 +195,8 @@ async function configureGladiaTranscriber(): Promise<GladiaTranscriberConfig> {
     prosody: gladiaConfig.prosody
   };
 
-  // Add optional fields only if they have values
-  if (gladiaConfig.language) {
+  // Only add language if languageBehaviour is 'manual'
+  if (gladiaConfig.languageBehaviour === 'manual' && gladiaConfig.language) {
     config.language = gladiaConfig.language;
   }
 
@@ -299,7 +299,143 @@ async function configureDeepgramTranscriber() {
   return deepgramConfig;
 }
 
-// Update the existing configureTranscriber function
+// Add after the existing configureDeepgramTranscriber function
+async function configureCustomTranscriber() {
+  const customConfig = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'url',
+      message: 'Enter the custom transcriber server URL:',
+      validate: (input: string) => {
+        if (!input.trim()) {
+          return 'Server URL is required';
+        }
+        try {
+          new URL(input);
+          return true;
+        } catch {
+          return 'Please enter a valid URL';
+        }
+      }
+    },
+    {
+      type: 'number',
+      name: 'timeoutSeconds',
+      message: 'Enter timeout in seconds (1-60):',
+      default: 20,
+      validate: (value) => {
+        if (value >= 1 && value <= 60) return true;
+        return 'Timeout must be between 1 and 60 seconds';
+      }
+    },
+    {
+      type: 'input',
+      name: 'secret',
+      message: 'Enter server secret (optional):',
+    },
+    {
+      type: 'confirm',
+      name: 'hasCustomHeaders',
+      message: 'Do you want to add custom headers?',
+      default: false
+    }
+  ]);
+
+  let headers = {};
+  if (customConfig.hasCustomHeaders) {
+    let addingHeaders = true;
+    while (addingHeaders) {
+      const header = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'key',
+          message: 'Enter header name:',
+          validate: (input) => input.trim() !== '' || 'Header name is required'
+        },
+        {
+          type: 'input',
+          name: 'value',
+          message: 'Enter header value:',
+          validate: (input) => input.trim() !== '' || 'Header value is required'
+        },
+        {
+          type: 'confirm',
+          name: 'addAnother',
+          message: 'Add another header?',
+          default: false
+        }
+      ]);
+
+      headers = {
+        ...headers,
+        [header.key]: header.value
+      };
+
+      if (!header.addAnother) {
+        addingHeaders = false;
+      }
+    }
+  }
+
+  return {
+    provider: 'custom-transcriber' as const,
+    server: {
+      url: customConfig.url,
+      timeoutSeconds: customConfig.timeoutSeconds,
+      ...(customConfig.secret && { secret: customConfig.secret }),
+      ...(Object.keys(headers).length > 0 && { headers })
+    }
+  };
+}
+
+// Update the configureCustomGladia function
+async function configureCustomGladia() {
+  const { languages } = await inquirer.prompt([
+    {
+      type: 'checkbox',
+      name: 'languages',
+      message: 'Select languages for code switching:',
+      choices: [
+        { name: 'Arabic', value: 'ar' },
+        { name: 'English', value: 'en' },
+        { name: 'French', value: 'fr' },
+        { name: 'Spanish', value: 'es' },
+        { name: 'German', value: 'de' },
+        { name: 'Italian', value: 'it' },
+        { name: 'Portuguese', value: 'pt' },
+        { name: 'Hindi', value: 'hi' }
+      ],
+      validate: (answer) => answer.length > 0 || 'Select at least one language',
+      default: ['en']
+    }
+  ]);
+
+  // Create the configuration object as a header
+  const configHeader = JSON.stringify({
+    language_config: {
+      code_switching: true,
+      languages: languages
+    },
+    encoding: 'wav/pcm',
+    bit_depth: 16
+  });
+
+  // Return custom transcriber configuration
+  return {
+    provider: 'custom-transcriber' as const,
+    server: {
+      url: 'https://api.gladia.io/v2/live',
+      timeoutSeconds: 20,
+      headers: {
+        'x-gladia-key': '0cf94ad0-74e5-4621-a606-10b5712a4e25',
+        'Content-Type': 'application/json',
+        'x-gladia-config': configHeader // Pass configuration as a header
+      }
+    }
+  };
+}
+
+// Update the configureTranscriber function to include the new option
 async function configureTranscriber() {
   const { provider } = await inquirer.prompt([
     {
@@ -308,7 +444,8 @@ async function configureTranscriber() {
       message: 'Select transcriber provider:',
       choices: [
         { name: 'Deepgram', value: 'deepgram' },
-        { name: 'Gladia', value: 'gladia' },
+        { name: 'Gladia (Standard)', value: 'gladia' },
+        { name: 'Gladia (Custom Code Switching)', value: 'gladia-custom' },
         { name: 'Custom Transcriber', value: 'custom-transcriber' },
         { name: 'Talkscriber', value: 'talkscriber' }
       ]
@@ -318,9 +455,15 @@ async function configureTranscriber() {
   switch (provider) {
     case 'gladia':
       return configureGladiaTranscriber();
+    case 'gladia-custom':
+      return configureCustomGladia();
     case 'deepgram':
       return configureDeepgramTranscriber();
-    // ... other cases remain the same
+    case 'custom-transcriber':
+      return configureCustomTranscriber();
+    case 'talkscriber':
+      // ... existing talkscriber configuration
+      break;
   }
 }
 
@@ -391,7 +534,7 @@ async function handleAssistants() {
       }
 
       case assistantMenuChoices.CREATE: {
-        // First ask for name and first message
+        // Get basic assistant info
         const { name, firstMessage, modelProvider } = await inquirer.prompt([
           {
             type: 'input',
@@ -419,8 +562,32 @@ async function handleAssistants() {
           }
         ]);
 
-        // Get model configuration immediately after provider selection
+        // Get system message
+        const { systemMessage } = await inquirer.prompt({
+          type: 'editor',
+          name: 'systemMessage',
+          message: 'Enter system message (opens in editor):',
+          default: `You are a helpful customer service assistant for ${name}.
+
+Key Guidelines:
+1. Be professional and courteous
+2. Keep responses concise and clear
+3. Ask for clarification when needed
+4. Know when to escalate to a human agent
+
+Remember to:
+- Maintain a helpful tone
+- Protect customer privacy
+- Follow business policies
+- Be accurate and honest`
+        });
+
+        // Get model configuration
         const modelConfig = await configureModel(modelProvider);
+        modelConfig.messages = [{
+          role: 'system',
+          content: systemMessage
+        }];
 
         // Then ask for voice provider
         const { voiceProvider } = await inquirer.prompt([
@@ -512,34 +679,72 @@ async function handleAssistants() {
           loop: false
         });
 
-        const { name, firstMessage } = await inquirer.prompt([
-          {
-            type: 'input',
-            name: 'name',
-            message: 'Enter new name (leave empty to skip):',
-          },
-          {
-            type: 'input',
-            name: 'firstMessage',
-            message: 'Enter new first message (leave empty to skip):',
-          }
-        ]);
+        const { updateType } = await inquirer.prompt({
+          type: 'checkbox',
+          name: 'updateType',
+          message: 'What would you like to update?',
+          choices: [
+            { name: 'Name', value: 'name' },
+            { name: 'First Message', value: 'firstMessage' },
+            { name: 'System Message', value: 'systemMessage' },
+            { name: 'Transcriber', value: 'transcriber' }
+          ]
+        });
 
         const updates: any = {};
-        if (name) updates.name = name;
-        if (firstMessage) updates.firstMessage = firstMessage;
 
-        const transcriberUpdate = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'updateTranscriber',
-            message: 'Would you like to update the transcriber configuration?',
-            default: false
+        if (updateType.includes('name')) {
+          const { name } = await inquirer.prompt({
+            type: 'input',
+            name: 'name',
+            message: 'Enter new name:'
+          });
+          if (name) updates.name = name;
+        }
+
+        if (updateType.includes('firstMessage')) {
+          const { firstMessage } = await inquirer.prompt({
+            type: 'input',
+            name: 'firstMessage',
+            message: 'Enter new first message:'
+          });
+          if (firstMessage) updates.firstMessage = firstMessage;
+        }
+
+        if (updateType.includes('systemMessage')) {
+          // First get current system message if it exists
+          spinner.start('Fetching current assistant details...');
+          const currentAssistant = await assistantService.getAssistant(id);
+          spinner.stop();
+
+          const currentSystemMessage = currentAssistant.success && 
+            currentAssistant.data?.model?.messages?.find(m => m.role === 'system')?.content;
+
+          const { systemMessage } = await inquirer.prompt({
+            type: 'editor',
+            name: 'systemMessage',
+            message: 'Enter new system message (opens in editor):',
+            default: currentSystemMessage || 'You are a helpful customer service assistant.'
+          });
+
+          if (systemMessage) {
+            updates.model = {
+              ...(updates.model || {}),
+              messages: [{
+                role: 'system',
+                content: systemMessage
+              }]
+            };
           }
-        ]);
+        }
 
-        if (transcriberUpdate.updateTranscriber) {
+        if (updateType.includes('transcriber')) {
           updates.transcriber = await configureTranscriber();
+        }
+
+        if (Object.keys(updates).length === 0) {
+          console.log(chalk.yellow('No updates specified'));
+          break;
         }
 
         spinner.start('Updating assistant...');
