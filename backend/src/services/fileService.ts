@@ -88,8 +88,24 @@ export class FileService {
     options?: FileUploadOptions
   ): Promise<FileUploadResponse> {
     try {
-      // Convert our options to a generic object
-      const requestOptions: RequestOptions = options || {};
+      // Get file extension and set appropriate MIME type
+      const filePath = (fileStream as any).path;
+      const mimeType = this.getMimeType(filePath);
+      
+      if (!mimeType) {
+        return {
+          success: false,
+          error: 'Unsupported file type. Supported types: .txt, .md, .pdf, .doc, .docx'
+        };
+      }
+
+      // Convert our options to a generic object and add content type
+      const requestOptions: RequestOptions = {
+        ...options,
+        headers: {
+          'Content-Type': mimeType
+        }
+      };
       
       const file = await this.client.files.create(fileStream, requestOptions);
       return {
@@ -114,6 +130,19 @@ export class FileService {
         error: 'Unknown error occurred'
       };
     }
+  }
+
+  private getMimeType(filePath: string): string | null {
+    const ext = filePath.split('.').pop()?.toLowerCase();
+    const mimeTypes: { [key: string]: string } = {
+      'txt': 'text/plain',
+      'md': 'text/markdown',
+      'pdf': 'application/pdf',
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    };
+    
+    return ext ? mimeTypes[ext] || null : null;
   }
 
   async deleteFile(id: string): Promise<DeleteFileResponse> {

@@ -3,6 +3,9 @@ import { Building2, MessageSquare, Clock, Globe, Phone } from 'lucide-react'
 
 interface CustomTemplateFormProps {
   config: {
+    businessName: string
+    businessEmail: string
+    businessPhone: string
     industry: string
     businessType: string
     tone: string
@@ -11,12 +14,26 @@ interface CustomTemplateFormProps {
       timezone: string
       schedule: Array<{ days: string[]; hours: string }>
     }
-    languages?: string[]
     specialServices?: string[]
     complianceRequirements?: string[]
     productCategories?: string[]
     educationLevel?: string
     specializations?: string[]
+    customerTypes?: string[]
+    commonScenarios?: string[]
+    keyPolicies?: string[]
+    industryTerminology?: string[]
+    competitorInfo?: string[]
+    locationDetails?: {
+      address: string
+      facilities: string[]
+      accessibility: string[]
+    }
+    staffInfo?: {
+      roles: string[]
+      expertise: string[]
+      availability: string
+    }
   }
   setConfig: (config: any) => void
   onSubmit: (e: React.FormEvent) => void
@@ -25,13 +42,13 @@ interface CustomTemplateFormProps {
 }
 
 const industrySpecificFields: Record<string, (config: any, setConfig: any) => React.ReactNode> = {
-  'hotel-boutique': (config: any, setConfig: any) => (
-    <>
+  'hotel-boutique': (config, setConfig) => (
+    <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium mb-2 text-gray-700">Luxury Amenities</label>
+        <label className="block text-sm font-medium mb-2">Luxury Amenities & Features</label>
         <textarea
-          placeholder="List your premium amenities and services..."
-          className="input-field w-full px-4 py-3 rounded-lg border border-gray-200"
+          placeholder="List your unique amenities, VIP services, and exclusive partnerships..."
+          className="input-field w-full"
           value={config.specialServices?.join('\n')}
           onChange={e => setConfig({ 
             ...config, 
@@ -40,34 +57,434 @@ const industrySpecificFields: Record<string, (config: any, setConfig: any) => Re
           rows={4}
         />
       </div>
+      
       <div>
-        <label className="block text-sm font-medium mb-2 text-gray-700">Concierge Services</label>
+        <label className="block text-sm font-medium mb-2">Special Experiences</label>
         <textarea
-          placeholder="Describe your concierge services..."
-          className="input-field w-full px-4 py-3 rounded-lg border border-gray-200"
+          placeholder="Describe special experiences, concierge services, and fine dining options..."
+          className="input-field w-full"
           value={config.specificDetails}
           onChange={e => setConfig({ ...config, specificDetails: e.target.value })}
           rows={3}
         />
       </div>
-    </>
+    </div>
   ),
 
-  'healthcare-clinic': (config: any, setConfig: any) => (
-    <>
+  'hotel-business': (config, setConfig) => (
+    <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium mb-2 text-gray-700">Medical Specialties</label>
+        <label className="block text-sm font-medium mb-2">Business Facilities</label>
         <textarea
-          placeholder="List your medical specialties..."
-          className="input-field w-full px-4 py-3 rounded-lg border border-gray-200"
+          placeholder="List business center capabilities, meeting spaces, corporate services..."
+          className="input-field w-full"
+          value={config.specialServices?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specialServices: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-2">Corporate Programs</label>
+        <textarea
+          placeholder="Describe corporate rates, group booking policies, airport services..."
+          className="input-field w-full"
+          value={config.specificDetails}
+          onChange={e => setConfig({ ...config, specificDetails: e.target.value })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'hotel-resort': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Recreational Facilities</label>
+        <textarea
+          placeholder="List all recreational facilities, activities, and entertainment options..."
+          className="input-field w-full"
+          value={config.specialServices?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specialServices: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-2">Family & Entertainment Services</label>
+        <textarea
+          placeholder="Describe family packages, entertainment schedules, special events..."
+          className="input-field w-full"
+          value={config.specificDetails}
+          onChange={e => setConfig({ ...config, specificDetails: e.target.value })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'healthcare-clinic': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Medical Services</label>
+        <textarea
+          placeholder="List your medical services, specialties, and urgent care capabilities..."
+          className="input-field w-full"
           value={config.specializations?.join('\n')}
           onChange={e => setConfig({ 
             ...config, 
             specializations: e.target.value.split('\n').filter(Boolean)
           })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Insurance & Compliance</label>
+        <textarea
+          placeholder="List accepted insurance providers and compliance requirements..."
+          className="input-field w-full"
+          value={config.complianceRequirements?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            complianceRequirements: e.target.value.split('\n').filter(Boolean)
+          })}
           rows={3}
         />
       </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Emergency Protocols</label>
+        <textarea
+          placeholder="Describe urgent care protocols and emergency procedures..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'healthcare-specialist': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Specialist Services</label>
+        <textarea
+          placeholder="List your specialized medical services and treatment areas..."
+          className="input-field w-full"
+          value={config.specializations?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specializations: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Referral Requirements</label>
+        <textarea
+          placeholder="Describe referral processes and requirements..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Insurance & Authorization</label>
+        <textarea
+          placeholder="List insurance details and authorization requirements..."
+          className="input-field w-full"
+          value={config.complianceRequirements?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            complianceRequirements: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'healthcare-dental': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Dental Services</label>
+        <textarea
+          placeholder="List all dental services and procedures offered..."
+          className="input-field w-full"
+          value={config.specializations?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specializations: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Emergency Procedures</label>
+        <textarea
+          placeholder="Describe dental emergency protocols and handling..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Insurance & Payment Plans</label>
+        <textarea
+          placeholder="List accepted insurance and available payment plans..."
+          className="input-field w-full"
+          value={config.complianceRequirements?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            complianceRequirements: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'education-elementary': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">School Programs</label>
+        <textarea
+          placeholder="List grade levels, special programs, and after-school activities..."
+          className="input-field w-full"
+          value={config.specialServices?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specialServices: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Safety & Communication Protocols</label>
+        <textarea
+          placeholder="Describe attendance policies, safety procedures, parent communication..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">School Events & Activities</label>
+        <textarea
+          placeholder="List regular school events and activities..."
+          className="input-field w-full"
+          value={config.commonScenarios?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            commonScenarios: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'education-highschool': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Academic Programs</label>
+        <textarea
+          placeholder="List academic programs, extracurricular activities, and requirements..."
+          className="input-field w-full"
+          value={config.specialServices?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specialServices: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Academic Policies</label>
+        <textarea
+          placeholder="Describe grading policies, attendance requirements, academic standards..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Student Activities</label>
+        <textarea
+          placeholder="List sports, clubs, and other student activities..."
+          className="input-field w-full"
+          value={config.commonScenarios?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            commonScenarios: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'education-university': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Academic Programs & Departments</label>
+        <textarea
+          placeholder="List academic programs, departments, and degree offerings..."
+          className="input-field w-full"
+          value={config.specializations?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specializations: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Campus Services</label>
+        <textarea
+          placeholder="Describe available campus services and resources..."
+          className="input-field w-full"
+          value={config.specialServices?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specialServices: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Enrollment Policies</label>
+        <textarea
+          placeholder="List enrollment requirements and procedures..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'corporate-executive': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Executive Services</label>
+        <textarea
+          placeholder="List executive-level services and facilities..."
+          className="input-field w-full"
+          value={config.specialServices?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specialServices: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Confidentiality Protocols</label>
+        <textarea
+          placeholder="Describe confidentiality requirements and handling procedures..."
+          className="input-field w-full"
+          value={config.complianceRequirements?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            complianceRequirements: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Priority Handling</label>
+        <textarea
+          placeholder="List priority handling procedures and VIP protocols..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'corporate-midlevel': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Department Operations</label>
+        <textarea
+          placeholder="List departmental services and operational procedures..."
+          className="input-field w-full"
+          value={config.specialServices?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specialServices: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Team Coordination</label>
+        <textarea
+          placeholder="Describe team coordination and project management procedures..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'corporate-entrylevel': (config, setConfig) => (
+    <div className="space-y-6">
       <div>
         <label className="block text-sm font-medium mb-2 text-gray-700">Compliance Requirements</label>
         <div className="space-y-2">
@@ -92,39 +509,133 @@ const industrySpecificFields: Record<string, (config: any, setConfig: any) => Re
           ))}
         </div>
       </div>
-    </>
+    </div>
   ),
 
-  'retail-boutique': (config: any, setConfig: any) => (
-    <>
+  'professional-law': (config, setConfig) => (
+    <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium mb-2 text-gray-700">Product Categories</label>
+        <label className="block text-sm font-medium mb-2">Legal Practice Areas</label>
         <textarea
-          placeholder="List your main product categories..."
-          className="input-field w-full px-4 py-3 rounded-lg border border-gray-200"
-          value={config.productCategories?.join('\n')}
+          placeholder="List your practice areas and specialized legal services..."
+          className="input-field w-full"
+          value={config.specializations?.join('\n')}
           onChange={e => setConfig({ 
             ...config, 
-            productCategories: e.target.value.split('\n').filter(Boolean)
+            specializations: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Client Confidentiality</label>
+        <textarea
+          placeholder="Describe confidentiality policies and client handling procedures..."
+          className="input-field w-full"
+          value={config.complianceRequirements?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            complianceRequirements: e.target.value.split('\n').filter(Boolean)
           })}
           rows={3}
         />
       </div>
+
       <div>
-        <label className="block text-sm font-medium mb-2 text-gray-700">Return Policy</label>
+        <label className="block text-sm font-medium mb-2">Legal Procedures</label>
         <textarea
-          placeholder="Describe your return policy..."
-          className="input-field w-full px-4 py-3 rounded-lg border border-gray-200"
-          value={config.specificDetails}
-          onChange={e => setConfig({ ...config, specificDetails: e.target.value })}
+          placeholder="List standard legal procedures and document handling..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
           rows={3}
         />
       </div>
-    </>
+    </div>
   ),
-  
-  // Add other template-specific fields...
-}
+
+  'professional-consulting': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Consulting Services</label>
+        <textarea
+          placeholder="List your consulting services and expertise areas..."
+          className="input-field w-full"
+          value={config.specializations?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specializations: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Project Management</label>
+        <textarea
+          placeholder="Describe project handling and consultation procedures..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  ),
+
+  'professional-accounting': (config, setConfig) => (
+    <div className="space-y-6">
+      <div>
+        <label className="block text-sm font-medium mb-2">Accounting Services</label>
+        <textarea
+          placeholder="List your accounting services and specializations..."
+          className="input-field w-full"
+          value={config.specializations?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            specializations: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={4}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Tax & Compliance</label>
+        <textarea
+          placeholder="Describe tax services and compliance procedures..."
+          className="input-field w-full"
+          value={config.complianceRequirements?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            complianceRequirements: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Financial Procedures</label>
+        <textarea
+          placeholder="List standard financial procedures and document handling..."
+          className="input-field w-full"
+          value={config.keyPolicies?.join('\n')}
+          onChange={e => setConfig({ 
+            ...config, 
+            keyPolicies: e.target.value.split('\n').filter(Boolean)
+          })}
+          rows={3}
+        />
+      </div>
+    </div>
+  )
+};
 
 export function CustomTemplateForm({ 
   config, 
@@ -153,8 +664,26 @@ export function CustomTemplateForm({
       </div>
       
       <div className="grid gap-6">
-        {/* Common fields */}
+        {/* Basic Business Information */}
         <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">Business Name</label>
+            <div className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Enter business name"
+                className="input-field flex-1"
+                value={config.businessName || ''}
+                onChange={e => setConfig({
+                  ...config,
+                  businessName: e.target.value
+                })}
+                required
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700">Business Hours</label>
             <div className="flex items-center gap-2">
@@ -174,23 +703,42 @@ export function CustomTemplateForm({
               />
             </div>
           </div>
+        </div>
 
+        <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">Languages</label>
+            <label className="block text-sm font-medium mb-2 text-gray-700">Business Email</label>
             <div className="flex items-center gap-2">
-              <Globe className="w-5 h-5 text-gray-400" />
-              <select
+              <MessageSquare className="w-5 h-5 text-gray-400" />
+              <input
+                type="email"
+                placeholder="contact@yourbusiness.com"
                 className="input-field flex-1"
-                value={config.languages?.[0] || 'en'}
+                value={config.businessEmail || ''}
                 onChange={e => setConfig({
                   ...config,
-                  languages: [e.target.value]
+                  businessEmail: e.target.value
                 })}
-              >
-                <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-              </select>
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">Business Phone</label>
+            <div className="flex items-center gap-2">
+              <Phone className="w-5 h-5 text-gray-400" />
+              <input
+                type="tel"
+                placeholder="+1 (555) 123-4567"
+                className="input-field flex-1"
+                value={config.businessPhone || ''}
+                onChange={e => setConfig({
+                  ...config,
+                  businessPhone: e.target.value
+                })}
+                required
+              />
             </div>
           </div>
         </div>
