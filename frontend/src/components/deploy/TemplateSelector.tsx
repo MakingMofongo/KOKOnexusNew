@@ -268,11 +268,14 @@ export function TemplateSelector() {
 
     store.updateBusinessConfig({
       businessName: businessConfig.businessName,
+      industry: mainIndustry,
       settings: {
-        tone: 'professional',
-        language: ['en'],
-        model: template.model
-      }
+        recordCalls: false,
+        transcribeCalls: true,
+        analyticsEnabled: true
+      },
+      languages: ['en'],
+      tone: 'professional'
     });
     
     store.setSelectedTemplate(templateId);

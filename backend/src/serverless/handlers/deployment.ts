@@ -55,13 +55,13 @@ Hotel Specific Information:
 - Email: ${config.businessEmail || 'Not provided'}
 
 Business Hours:
-${config.businessHours?.schedule?.map(schedule => 
+${config.businessHours?.schedule?.map((schedule: { days: string[], hours: string }) => 
   `- ${schedule.days.join(', ')}: ${schedule.hours}`
 ).join('\n') || '- Standard business hours'}
 
 ${config.specialServices?.length ? `
 Luxury Amenities & Features:
-${config.specialServices.map(service => `- ${service}`).join('\n')}` : ''}
+${config.specialServices.map((service: string) => `- ${service}`).join('\n')}` : ''}
 
 ${config.specificDetails ? `
 Special Experiences & Services:
@@ -77,6 +77,7 @@ ${config.customInstructions ? `Additional Instructions:\n${config.customInstruct
     // Update the assistant with final configuration
     const assistantUpdateData: UpdateAssistantDto = {
       name: config.businessName,
+      firstMessage: templateConfig?.firstMessage || `Hello! Welcome to ${config.businessName}. How can I assist you today?`,
       model: {
         provider: 'groq',
         model: 'llama-3.1-8b-instant',
@@ -85,7 +86,7 @@ ${config.customInstructions ? `Additional Instructions:\n${config.customInstruct
         messages: [
           {
             role: 'system',
-            content: systemMessage  // Use the enhanced system message
+            content: systemMessage
           }
         ]
       },

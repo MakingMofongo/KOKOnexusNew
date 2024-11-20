@@ -5,13 +5,12 @@ export interface IndustryTemplate {
 
 export interface SubtypeTemplate {
   name: string;
-  basePrompt: string;
-  configFields: string[];
   systemPrompt: string;
-  model: {
+  firstMessage?: string;
+  model?: {
     provider: string;
     model: string;
-    temperature: number;
+    temperature?: number;
   };
 }
 
@@ -21,10 +20,6 @@ export const industryTemplates: Record<string, IndustryTemplate> = {
     subtypes: {
       'hotel-boutique': {
         name: 'Boutique Hotel',
-        basePrompt: `You are a luxury boutique hotel concierge assistant handling incoming calls.
-        Your primary objectives are handling room bookings and providing detailed information about our luxury accommodations and services.
-        Always be proactive in gathering necessary information while maintaining an elegant, professional tone.`,
-        configFields: ['amenities', 'services', 'localAttractions', 'roomTypes', 'rates'],
         systemPrompt: `You are an AI concierge handling phone calls for a luxury boutique hotel. Your primary role is to assist callers with room bookings and inquiries while delivering the exceptional service our guests expect.
 
 Key Call Handling Protocols:
