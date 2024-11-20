@@ -1,12 +1,35 @@
 import { create } from 'zustand'
-import { BusinessConfig, DeploymentResult } from '@backend/types/business'
+import { DeploymentResult } from '@backend/types/business'
 import { Assistant } from '@backend/types/assistant'
 import { PhoneNumber } from '@backend/types/phoneNumber'
 
+// Rename the imported BusinessConfig to avoid conflict
+import { BusinessConfig as BackendBusinessConfig } from '@backend/types/business'
+
+// Extend the backend config with our frontend-specific fields
+export interface BusinessConfig extends BackendBusinessConfig {
+  specificDetails?: string[] | string;
+  specialServices?: string[];
+  complianceRequirements?: string[];
+  productCategories?: string[];
+  specializations?: string[];
+  assistantId?: string;
+  settings?: {
+    recordCalls?: boolean;
+    transcribeCalls?: boolean;
+    analyticsEnabled?: boolean;
+    model?: {
+      provider: string;
+      model: string;
+      temperature?: number;
+    };
+  };
+}
+
 interface DeploymentState {
   step: 'template' | 'voice' | 'number' | 'deploy'
-  businessConfig: Partial<BusinessConfig> & { assistantId?: string; systemPrompt?: string }
-  selectedTemplate: string
+  businessConfig: Partial<BusinessConfig>
+  selectedTemplate: string | null
   selectedVoice: {
     provider: string
     voiceId: string

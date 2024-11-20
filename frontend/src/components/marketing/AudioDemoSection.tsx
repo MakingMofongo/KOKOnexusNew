@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { TRANSITIONS } from '@/lib/constants/animations'
 import Image from 'next/image'
@@ -36,25 +36,32 @@ const demoCards = [
 ]
 
 export function AudioDemoSection() {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   return (
     <section className="py-20 bg-gradient-to-b from-gray-900 to-black relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
         {/* Audio Visualization Background */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="audio-bars flex justify-center items-end h-full">
-            {Array.from({ length: 128 }).map((_, i) => (
-              <div
-                key={i}
-                className="w-1 mx-[1px] bg-gradient-to-t from-purple-500 to-blue-500"
-                style={{
-                  height: `${Math.random() * 100}%`,
-                  animation: `audioBar 1.5s ease-in-out infinite ${i * 0.01}s`
-                }}
-              />
-            ))}
+        {isClient && (
+          <div className="absolute inset-0 opacity-20">
+            <div className="audio-bars flex justify-center items-end h-full">
+              {Array.from({ length: 128 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-1 mx-[1px] bg-gradient-to-t from-purple-500 to-blue-500 audio-bar"
+                  style={{
+                    animationDelay: `${i * 0.01}s`
+                  }}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         
         {/* Grid Pattern */}
         <div className="absolute inset-0 grid-bg opacity-10" />

@@ -278,3 +278,17 @@
   box-shadow: 4px 4px 0 0 currentColor;
 }
 
+@keyframes audioBar {
+  0%, 100% {
+    height: 15%;
+  }
+  50% {
+    height: 65%;
+  }
+}
+
+.audio-bar {
+  animation: audioBar 1.5s ease-in-out infinite;
+  height: 15%;
+}
+

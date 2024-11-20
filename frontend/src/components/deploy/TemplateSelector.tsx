@@ -14,23 +14,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { PreConfiguredTemplates } from "./PreConfiguredTemplates";
 import { CustomTemplateForm } from "./CustomTemplateForm";
-
-interface BusinessConfig {
-  businessName: string;
-  settings: {
-    tone: 'professional' | 'friendly' | 'casual';
-    language: string[];
-    recordCalls?: boolean;
-    transcribeCalls?: boolean;
-    model?: {
-      provider: string;
-      model: string;
-      temperature?: number;
-    };
-  };
-  systemPrompt?: string;
-  industry?: string;
-}
+import { BusinessConfig } from "@/lib/store/deploymentStore";
 
 const industryTemplates = [
   {
@@ -221,16 +205,18 @@ export function TemplateSelector() {
     const store = useDeploymentStore.getState();
     store.updateBusinessConfig({
       businessName: customConfig.businessName,
-      businessEmail: customConfig.businessEmail,
-      businessPhone: customConfig.businessPhone,
       settings: {
         recordCalls: false,
         transcribeCalls: false,
-        analyticsEnabled: true,
+        analyticsEnabled: true
       },
+      tone: customConfig.tone as 'professional' | 'friendly' | 'casual',
       businessHours: customConfig.businessHours,
       specialServices: customConfig.specialServices,
       specificDetails: customConfig.specificDetails,
+      ...(customConfig.businessEmail && { businessEmail: customConfig.businessEmail }),
+      ...(customConfig.businessPhone && { businessPhone: customConfig.businessPhone }),
+      languages: ['en']
     });
 
     setStep("voice");
@@ -274,8 +260,10 @@ export function TemplateSelector() {
         transcribeCalls: true,
         analyticsEnabled: true
       },
-      languages: ['en'],
-      tone: 'professional'
+      tone: customConfig.tone as 'professional' | 'friendly' | 'casual',
+      specialServices: customConfig.specialServices,
+      specificDetails: customConfig.specificDetails,
+      languages: ['en']
     });
     
     store.setSelectedTemplate(templateId);
