@@ -2,7 +2,7 @@ const path = require('path')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    reactStrictMode: true,
+    reactStrictMode: false,
     images: {
         domains: [
             'images.unsplash.com'
@@ -15,7 +15,17 @@ const nextConfig = {
             },
         ],
     },
-    webpack: (config) => {
+    webpack: (config, { isServer }) => {
+        // Add backend as external module
+        if (isServer) {
+            config.externals = [...config.externals, 
+                'dotenv',
+                '@vapi-ai/server-sdk',
+                'twilio'
+            ]
+        }
+        
+        // Add backend path alias
         config.resolve.alias = {
             ...config.resolve.alias,
             '@backend': path.join(__dirname, '../backend/src')
@@ -50,7 +60,15 @@ const nextConfig = {
             bodySizeLimit: '2mb'
         }
     },
-    transpilePackages: ['@backend']
+    transpilePackages: ['@backend'],
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '2mb'
+        },
+        // Add this to handle external packages
+        externalDir: true,
+        outputFileTracingRoot: path.join(__dirname, '../')
+    }
 }
 
 module.exports = nextConfig
