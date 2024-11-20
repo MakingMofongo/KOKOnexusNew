@@ -9,12 +9,12 @@ interface CustomTemplateFormProps {
     industry: string
     businessType: string
     tone: string
-    specificDetails: string
+    specificDetails: string[]
     businessHours?: {
       timezone: string
       schedule: Array<{ days: string[]; hours: string }>
     }
-    specialServices?: string[]
+    specialServices: string[]
     complianceRequirements?: string[]
     productCategories?: string[]
     educationLevel?: string
@@ -49,7 +49,7 @@ const industrySpecificFields: Record<string, (config: any, setConfig: any) => Re
         <textarea
           placeholder="List your unique amenities, VIP services, and exclusive partnerships..."
           className="input-field w-full"
-          value={config.specialServices?.join('\n')}
+          value={Array.isArray(config.specialServices) ? config.specialServices.join('\n') : ''}
           onChange={e => setConfig({ 
             ...config, 
             specialServices: e.target.value.split('\n').filter(Boolean)
@@ -63,8 +63,11 @@ const industrySpecificFields: Record<string, (config: any, setConfig: any) => Re
         <textarea
           placeholder="Describe special experiences, concierge services, and fine dining options..."
           className="input-field w-full"
-          value={config.specificDetails}
-          onChange={e => setConfig({ ...config, specificDetails: e.target.value })}
+          value={Array.isArray(config.specificDetails) ? config.specificDetails.join('\n') : ''}
+          onChange={e => setConfig({ 
+            ...config, 
+            specificDetails: e.target.value.split('\n').filter(Boolean)
+          })}
           rows={3}
         />
       </div>

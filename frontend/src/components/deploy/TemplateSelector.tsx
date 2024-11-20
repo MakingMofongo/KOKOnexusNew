@@ -189,7 +189,7 @@ export function TemplateSelector() {
     industry: "",
     businessType: "",
     tone: "professional",
-    specificDetails: "",
+    specificDetails: [],
     businessHours: {
       timezone: "America/New_York",
       schedule: [{ days: ["MONDAY", "FRIDAY"], hours: "9:00-17:00" }],
@@ -213,24 +213,24 @@ export function TemplateSelector() {
   const handleCustomizationComplete = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate business name before proceeding
     if (!customConfig.businessName?.trim()) {
       alert("Please enter a business name");
       return;
     }
 
-    // Update the deployment store with the business config
     const store = useDeploymentStore.getState();
     store.updateBusinessConfig({
       businessName: customConfig.businessName,
       businessEmail: customConfig.businessEmail,
       businessPhone: customConfig.businessPhone,
-      // Only include valid properties from the API schema
       settings: {
-        tone: customConfig.tone,
-        language: ["en"], // Default language
+        recordCalls: false,
+        transcribeCalls: false,
+        analyticsEnabled: true,
       },
       businessHours: customConfig.businessHours,
+      specialServices: customConfig.specialServices,
+      specificDetails: customConfig.specificDetails,
     });
 
     setStep("voice");
