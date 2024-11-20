@@ -1,4 +1,4 @@
-const path = require('path')
+!zaconst path = require('path')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
