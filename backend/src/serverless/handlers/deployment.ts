@@ -3,6 +3,7 @@ import { AssistantService } from '../../services/assistantService';
 import { PhoneNumberService } from '../../services/phoneNumberService';
 import { VAPI_TOKEN } from '../../config';
 import type { UpdateAssistantDto } from '../../types/assistant';
+import { industryTemplates } from '../../constants/templates';
 
 const assistantService = new AssistantService(VAPI_TOKEN);
 const phoneNumberService = new PhoneNumberService(VAPI_TOKEN);
@@ -17,46 +18,57 @@ export async function handleDeployment(req: Request) {
     const {
       config,
       template,
-      subtype,
       voice,
       number,
       systemPrompt
     } = body;
 
-    // Validate required fields
-    if (!systemPrompt) {
-      console.error('Missing system prompt');
+    // Get the template configuration
+    const [mainIndustry] = template.split('-');
+    const templateConfig = industryTemplates[mainIndustry]?.subtypes[template];
+
+    console.log('Template lookup:', {
+      template,
+      mainIndustry,
+      hasTemplateConfig: !!templateConfig,
+      systemPrompt,
+      templateSystemPrompt: templateConfig?.systemPrompt
+    });
+
+    // Use provided system prompt or fall back to template's system prompt
+    const finalSystemPrompt = systemPrompt || templateConfig?.systemPrompt;
+
+    if (!finalSystemPrompt) {
+      console.error('No system prompt available');
       return NextResponse.json(
         { success: false, error: 'System prompt is required' },
         { status: 400 }
       );
     }
 
-    if (!config?.businessName) {
-      console.error('Missing business name');
-      return NextResponse.json(
-        { success: false, error: 'Business name is required' },
-        { status: 400 }
-      );
-    }
+    // Create the enhanced system message by combining template prompt with business details
+    const systemMessage = `${finalSystemPrompt}
 
-    if (!config?.assistantId) {
-      console.error('Missing assistant ID');
-      return NextResponse.json(
-        { success: false, error: 'Assistant ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Create the system message by combining template prompt with business details
-    const systemMessage = `${systemPrompt}
-
-Business Details:
+Hotel Specific Information:
 - Name: ${config.businessName}
-- Industry: ${config.industry || 'Retail'}
-- Region: ${config.region || 'US'}
-- Languages: ${config.languages?.join(', ') || 'English'}
-- Tone: ${config.tone || 'Professional'}
+- Phone: ${config.businessPhone || 'Not provided'}
+- Email: ${config.businessEmail || 'Not provided'}
+
+Business Hours:
+${config.businessHours?.schedule?.map(schedule => 
+  `- ${schedule.days.join(', ')}: ${schedule.hours}`
+).join('\n') || '- Standard business hours'}
+
+${config.specialServices?.length ? `
+Luxury Amenities & Features:
+${config.specialServices.map(service => `- ${service}`).join('\n')}` : ''}
+
+${config.specificDetails ? `
+Special Experiences & Services:
+${config.specificDetails}` : ''}
+
+Languages: ${config.languages?.join(', ') || 'English'}
+Service Tone: ${config.tone || 'Professional'}
 
 ${config.customInstructions ? `Additional Instructions:\n${config.customInstructions}` : ''}`;
 
@@ -66,14 +78,14 @@ ${config.customInstructions ? `Additional Instructions:\n${config.customInstruct
     const assistantUpdateData: UpdateAssistantDto = {
       name: config.businessName,
       model: {
-        provider: 'vapi',
-        model: 'gpt-4',
+        provider: 'groq',
+        model: 'llama-3.1-8b-instant',
         temperature: 0.7,
         maxTokens: 150,
         messages: [
           {
             role: 'system',
-            content: systemMessage
+            content: systemMessage  // Use the enhanced system message
           }
         ]
       },
@@ -83,6 +95,14 @@ ${config.customInstructions ? `Additional Instructions:\n${config.customInstruct
         model: voice.model,
         stability: voice.stability,
         similarityBoost: voice.similarityBoost
+      },
+      transcriber: {
+        model: "nova-2",
+        language: "multi",
+        provider: "deepgram",
+        endpointing: 10,
+        smartFormat: false,
+        codeSwitchingEnabled: true
       }
     };
 

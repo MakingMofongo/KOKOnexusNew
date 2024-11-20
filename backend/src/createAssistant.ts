@@ -8,8 +8,8 @@ export async function createCallAssistant(token: string, systemMessage?: string)
     firstMessage: "Hello! I'm your virtual assistant. How can I help you today?",
     
     model: {
-      provider: "vapi",
-      model: "gpt-4",
+      provider: "groq",
+      model: "llama-3.1-8b-instant",
       temperature: 0.7,
       maxTokens: 150,
       emotionRecognitionEnabled: true,

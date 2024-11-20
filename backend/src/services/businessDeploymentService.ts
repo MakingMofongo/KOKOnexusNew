@@ -64,9 +64,9 @@ export class BusinessDeploymentService {
       name: `${config.businessName} Assistant`,
       firstMessage: template.generateGreeting(config),
       model: {
-        provider: "vapi",
-        model: "gpt-4",
-        temperature: template.getOptimalTemperature(),
+        provider: "groq",
+        model: "llama-3.1-8b-instant",
+        temperature: 0.7,
         maxTokens: template.getOptimalTokens(),
         emotionRecognitionEnabled: true,
         messages: [
@@ -168,12 +168,27 @@ export class BusinessDeploymentService {
       throw new Error('Business config not initialized');
     }
 
-    const templates: Record<string, IndustryTemplate> = {
-      retail: new RetailTemplate(this.businessConfig),
+    // Handle industry-subtype format (e.g., 'hotel-boutique')
+    const [mainIndustry, subtype] = industry.split('-');
+    
+    const templates: Record<string, (config: BusinessConfig) => IndustryTemplate> = {
+      hotel: (config) => {
+        const template = new DefaultTemplate(config);
+        template.setIndustryType(industry); // Pass full industry string including subtype
+        return template;
+      },
+      retail: (config) => new RetailTemplate(config),
       // Add other templates as they're implemented
     };
 
-    return templates[industry] || new DefaultTemplate(this.businessConfig);
+    const templateFactory = templates[mainIndustry];
+    if (templateFactory) {
+      return templateFactory(this.businessConfig);
+    }
+
+    const defaultTemplate = new DefaultTemplate(this.businessConfig);
+    defaultTemplate.setIndustryType(industry);
+    return defaultTemplate;
   }
 
   // Method to analyze an existing deployment

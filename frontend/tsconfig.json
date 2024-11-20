@@ -21,9 +21,10 @@
     ],
     "paths": {
       "@backend/*": ["../backend/src/*"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["../../shared/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "../../shared/**/*", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

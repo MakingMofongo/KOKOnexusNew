@@ -8,8 +8,13 @@ export interface IndustryConfig {
     language?: string[];
     recordCalls?: boolean;
     transcribeCalls?: boolean;
+    model?: {
+      provider: string;
+      model: string;
+      temperature?: number;
+    };
   };
-  [key: string]: any; // Allow for dynamic fields based on template
+  [key: string]: any;
 }
 
 export interface DeploymentConfig {
@@ -22,5 +27,9 @@ export interface DeploymentConfig {
     model?: string;
     stability?: number;
     similarityBoost?: number;
+  };
+  number?: {
+    id: string;
+    number: string;
   };
 } 

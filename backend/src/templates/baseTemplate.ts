@@ -81,7 +81,10 @@ export class BaseTemplate implements IndustryTemplate {
     return [
       {
         role: "system",
-        content: this.generateSystemMessage(this.businessConfig)
+        content: this.generateSystemMessage(this.businessConfig),
+        model: "llama-3.1-8b-instant",
+        provider: "groq",
+        temperature: 0.7
       }
     ];
   }

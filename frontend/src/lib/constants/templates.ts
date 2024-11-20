@@ -1,4 +1,21 @@
-export const industryTemplates = {
+export interface IndustryTemplate {
+  name: string;
+  subtypes: Record<string, SubtypeTemplate>;
+}
+
+export interface SubtypeTemplate {
+  name: string;
+  basePrompt: string;
+  configFields: string[];
+  systemPrompt: string;
+  model: {
+    provider: string;
+    model: string;
+    temperature: number;
+  };
+}
+
+export const industryTemplates: Record<string, IndustryTemplate> = {
   hotel: {
     name: 'Hotel & Hospitality',
     subtypes: {
@@ -54,12 +71,16 @@ Always:
 - Be proactive in anticipating needs
 - Show meticulous attention to detail
 - Personalize every interaction
-- Uphold luxury service standards`
+- Uphold luxury service standards`,
+        model: {
+          provider: "groq",
+          model: "llama-3.1-8b-instant",
+          temperature: 0.7
+        }
       }
     }
   }
-} as const;
+};
 
 export type IndustryTemplateType = keyof typeof industryTemplates;
-export type SubtypeType<T extends IndustryTemplateType> = 
-  keyof typeof industryTemplates[T]['subtypes']; 
+export type SubtypeType<T extends IndustryTemplateType> = keyof typeof industryTemplates[T]['subtypes'];

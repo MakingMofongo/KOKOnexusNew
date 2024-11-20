@@ -23,7 +23,12 @@ export const useTemplateStore = create<TemplateState>((set) => ({
       tone: 'professional',
       language: ['en'],
       recordCalls: false,
-      transcribeCalls: true
+      transcribeCalls: true,
+      model: {
+        provider: 'groq',
+        model: 'llama-3.1-8b-instant',
+        temperature: 0.7
+      }
     }
   } as IndustryConfig,
   industryPrompt: null,

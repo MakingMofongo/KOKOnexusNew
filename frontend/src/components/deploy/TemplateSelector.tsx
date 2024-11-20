@@ -15,6 +15,23 @@ import {
 import { PreConfiguredTemplates } from "./PreConfiguredTemplates";
 import { CustomTemplateForm } from "./CustomTemplateForm";
 
+interface BusinessConfig {
+  businessName: string;
+  settings: {
+    tone: 'professional' | 'friendly' | 'casual';
+    language: string[];
+    recordCalls?: boolean;
+    transcribeCalls?: boolean;
+    model?: {
+      provider: string;
+      model: string;
+      temperature?: number;
+    };
+  };
+  systemPrompt?: string;
+  industry?: string;
+}
+
 const industryTemplates = [
   {
     id: "hotel",
@@ -223,36 +240,43 @@ export function TemplateSelector() {
     const store = useDeploymentStore.getState();
     const businessConfig = store.businessConfig;
 
-    // Ensure we have the business name before proceeding
+    console.log('Template Selection:', {
+      templateId,
+      subtype,
+      businessConfig
+    });
+
     if (!businessConfig.businessName) {
       console.error("Business name is missing from config");
       return;
     }
 
-    // Generate a more detailed system prompt
-    const systemPrompt = `You are an AI assistant for ${
-      businessConfig.businessName
-    }. 
-You specialize in ${templateId} services with a focus on ${subtype}.
-
-Key Responsibilities:
-- Handle customer inquiries professionally
-- Provide accurate information about our services
-- Schedule appointments and manage reservations
-- Address common questions and concerns
-- Escalate complex issues when necessary
-
-Primary language: ${store.languages.primary}
-Additional languages: ${store.languages.additional.join(", ")}
-Tone: ${businessConfig.tone || "professional"}`;
-
-    // Update both the template and system prompt
-    store.setSelectedTemplate(templateId);
-    store.updateBusinessConfig({
-      systemPrompt,
-      industry: templateId.split("-")[0], // Set the industry based on template
-      businessName: businessConfig.businessName, // Ensure businessName is preserved
+    const [mainIndustry] = templateId.split('-');
+    const template = industryTemplates[mainIndustry]?.subtypes[templateId];
+    
+    console.log('Found template:', {
+      mainIndustry,
+      templateId,
+      hasTemplate: !!template,
+      systemPrompt: template?.systemPrompt
     });
+
+    if (!template) {
+      console.error("Template not found:", templateId);
+      return;
+    }
+
+    store.updateBusinessConfig({
+      businessName: businessConfig.businessName,
+      settings: {
+        tone: 'professional',
+        language: ['en'],
+        model: template.model
+      }
+    });
+    
+    store.setSelectedTemplate(templateId);
+    store.setSystemPrompt(template.systemPrompt);
     store.setStep("voice");
   };
 

@@ -41,6 +41,7 @@ interface DeploymentState {
   reset: () => void
   setAssistantId: (id: string) => void
   setIndustry: (industry: string) => void
+  setSystemPrompt: (prompt: string) => void
 }
 
 export const useDeploymentStore = create<DeploymentState>((set, get) => ({
@@ -76,6 +77,12 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
     const state = get()
     set({ isDeploying: true, error: null })
 
+    console.log('Deployment state:', {
+      template: state.selectedTemplate,
+      hasSystemPrompt: !!state.systemPrompt,
+      systemPromptPreview: state.systemPrompt?.substring(0, 100)
+    })
+
     try {
       // Create full business config
       const config: BusinessConfig = {
@@ -98,18 +105,6 @@ export const useDeploymentStore = create<DeploymentState>((set, get) => ({
         }
       }
 
-      // Ensure we have a system prompt
-      const systemPrompt = state.businessConfig.systemPrompt || `You are a helpful AI assistant for ${config.businessName}.
-You specialize in ${config.industry} services.
-Primary language: ${config.languages[0]}
-Tone: ${config.tone}
-
-Key Responsibilities:
-- Handle customer inquiries professionally
-- Provide accurate information about our services
-- Address common questions and concerns
-- Escalate complex issues when necessary`
-
       // Call backend deployment service
       const response = await fetch('/api/deploy', {
         method: 'POST',
@@ -119,7 +114,7 @@ Key Responsibilities:
           template: state.selectedTemplate,
           voice: state.selectedVoice,
           number: state.selectedNumber,
-          systemPrompt // Include the system prompt in the request
+          systemPrompt: state.systemPrompt // Use the stored system prompt
         })
       })
 
@@ -178,4 +173,9 @@ Key Responsibilities:
   })),
 
   setIndustry: (industry) => set({ industry }),
+
+  setSystemPrompt: (prompt) => {
+    console.log('Setting system prompt:', { prompt });
+    set({ systemPrompt: prompt });
+  },
 })) 

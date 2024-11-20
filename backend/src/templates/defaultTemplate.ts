@@ -3,19 +3,28 @@ import { BusinessConfig } from '../types/business';
 
 export class DefaultTemplate implements IndustryTemplate {
   protected businessConfig: BusinessConfig;
+  protected industryType: string;
 
   constructor(config: BusinessConfig) {
     this.businessConfig = config;
+    this.industryType = config.industry;
+  }
+
+  setIndustryType(industry: string) {
+    this.industryType = industry;
   }
 
   getBasePrompts() {
     const basePrompt = this.generateBasePrompt();
-    const industryPrompt = this.getIndustrySpecificPrompt(this.businessConfig.industry);
+    const industryPrompt = this.getIndustrySpecificPrompt(this.industryType);
     
     return [
       {
         role: "system",
-        content: `${basePrompt}\n\n${industryPrompt}`
+        content: `${basePrompt}\n\n${industryPrompt}`,
+        model: "llama-3.1-8b-instant",
+        provider: "groq",
+        temperature: 0.7
       }
     ];
   }
