@@ -27,16 +27,23 @@ const industryTemplates = [
         id: "hotel-boutique",
         name: "Boutique Hotel",
         description: "Personalized, luxury experience focus",
+        recommended: true,
+        beta: false,
+        recommendationReason: "Fully optimized template ready for testing"
       },
       {
         id: "hotel-business",
         name: "Business Hotel",
         description: "Efficient, professional service",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "hotel-resort",
         name: "Resort",
         description: "Vacation and leisure focused",
+        beta: true,
+        betaMessage: "Template in development"
       },
     ],
   },
@@ -50,16 +57,22 @@ const industryTemplates = [
         id: "healthcare-clinic",
         name: "Medical Clinic",
         description: "General practice and appointments",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "healthcare-specialist",
         name: "Specialist Office",
         description: "Specialized medical services",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "healthcare-dental",
         name: "Dental Practice",
         description: "Dental services focus",
+        beta: true,
+        betaMessage: "Template in development"
       },
     ],
   },
@@ -67,23 +80,28 @@ const industryTemplates = [
     id: "retail",
     name: "Retail & Sales",
     icon: <BuildingStorefrontIcon className="w-8 h-8 text-purple-600" />,
-    description:
-      "Ideal for retail stores and sales teams. Handles product inquiries and order status.",
+    description: "Ideal for retail stores and sales teams. Handles product inquiries and order status.",
     subtypes: [
       {
         id: "retail-boutique",
         name: "Boutique Store",
         description: "Personalized, luxury experience focus",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "retail-business",
         name: "Business Store",
         description: "Efficient, professional service",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "retail-resort",
         name: "Resort",
         description: "Vacation and leisure focused",
+        beta: true,
+        betaMessage: "Template in development"
       },
     ],
   },
@@ -91,23 +109,28 @@ const industryTemplates = [
     id: "education",
     name: "Education",
     icon: <AcademicCapIcon className="w-8 h-8 text-purple-600" />,
-    description:
-      "Designed for schools, universities, and educational institutions.",
+    description: "Designed for schools, universities, and educational institutions.",
     subtypes: [
       {
         id: "education-elementary",
         name: "Elementary School",
         description: "Primary education",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "education-highschool",
         name: "High School",
         description: "Secondary education",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "education-university",
         name: "University",
         description: "Higher education",
+        beta: true,
+        betaMessage: "Template in development"
       },
     ],
   },
@@ -115,23 +138,28 @@ const industryTemplates = [
     id: "corporate",
     name: "Corporate Office",
     icon: <BuildingOffice2Icon className="w-8 h-8 text-purple-600" />,
-    description:
-      "Perfect for corporate environments, handling calls, meetings, and inquiries.",
+    description: "Perfect for corporate environments, handling calls, meetings, and inquiries.",
     subtypes: [
       {
         id: "corporate-executive",
         name: "Executive Office",
         description: "High-level management and decision-making",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "corporate-midlevel",
         name: "Mid-Level Office",
         description: "Intermediate management and decision-making",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "corporate-entrylevel",
         name: "Entry-Level Office",
         description: "Junior-level tasks and responsibilities",
+        beta: true,
+        betaMessage: "Template in development"
       },
     ],
   },
@@ -139,23 +167,28 @@ const industryTemplates = [
     id: "professional",
     name: "Professional Services",
     icon: <BriefcaseIcon className="w-8 h-8 text-purple-600" />,
-    description:
-      "Tailored for law firms, consultants, and professional service providers.",
+    description: "Tailored for law firms, consultants, and professional service providers.",
     subtypes: [
       {
         id: "professional-law",
         name: "Law Firm",
         description: "Legal services focus",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "professional-consulting",
         name: "Consulting Firm",
         description: "Consulting services focus",
+        beta: true,
+        betaMessage: "Template in development"
       },
       {
         id: "professional-accounting",
         name: "Accounting Firm",
         description: "Accounting services focus",
+        beta: true,
+        betaMessage: "Template in development"
       },
     ],
   },

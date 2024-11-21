@@ -252,8 +252,7 @@ export function PhoneNumberSelector() {
   };
 
   const PurchaseConfirmationModal = () => {
-    if (!purchaseConfirmation.isOpen || !purchaseConfirmation.number)
-      return null;
+    if (!purchaseConfirmation.isOpen || !purchaseConfirmation.number) return null;
 
     const number = purchaseConfirmation.number;
 
@@ -266,15 +265,36 @@ export function PhoneNumberSelector() {
           transition={SPRING}
           className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 overflow-hidden"
         >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-            <h3 className="text-xl font-semibold text-white">
-              Confirm Purchase
+          {/* Warning Header */}
+          <div className="bg-red-600 px-6 py-4">
+            <h3 className="text-xl font-semibold text-white flex items-center">
+              <ExclamationTriangleIcon className="w-6 h-6 mr-2" />
+              ⚠️ WARNING: Real Purchase
             </h3>
           </div>
 
           {/* Content */}
           <div className="p-6 space-y-6">
+            {/* Warning Message */}
+            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start">
+                <ExclamationTriangleIcon className="w-6 h-6 text-red-600 mt-0.5 mr-3" />
+                <div>
+                  <h4 className="text-lg font-bold text-red-800">
+                    TEST ENVIRONMENT NOTICE
+                  </h4>
+                  <div className="mt-2 text-red-700 space-y-2">
+                    <p className="font-bold">
+                      This is a test environment, but purchases are REAL and will charge actual company funds!
+                    </p>
+                    <p>
+                      During the testing phase, please DO NOT purchase phone numbers unless explicitly authorized by your supervisor.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Number Details */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -287,76 +307,68 @@ export function PhoneNumberSelector() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-lg font-semibold text-red-600">
                     ${number.price.amount.toFixed(2)}
                   </p>
                   <p className="text-sm text-gray-500">per month</p>
                 </div>
               </div>
 
-              {/* Capabilities */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">
-                  Features
-                </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <CheckCircleIcon
-                      className={`w-4 h-4 mr-2 ${
-                        number.capabilities.voice
-                          ? "text-green-500"
-                          : "text-gray-400"
-                      }`}
-                    />
-                    Voice Calls
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <CheckCircleIcon
-                      className={`w-4 h-4 mr-2 ${
-                        number.capabilities.sms
-                          ? "text-green-500"
-                          : "text-gray-400"
-                      }`}
-                    />
-                    SMS
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <CheckCircleIcon
-                      className={`w-4 h-4 mr-2 ${
-                        number.capabilities.mms
-                          ? "text-green-500"
-                          : "text-gray-400"
-                      }`}
-                    />
-                    MMS
+              {/* Additional Warning */}
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 mt-0.5 mr-3" />
+                  <div>
+                    <h4 className="text-sm font-bold text-yellow-800">
+                      Confirmation Required
+                    </h4>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      To proceed, you must:
+                    </p>
+                    <ol className="list-decimal ml-4 mt-2 text-sm text-yellow-700">
+                      <li>Confirm you have explicit authorization to make this purchase</li>
+                      <li>Type the exact monthly cost below</li>
+                      <li>Type "I UNDERSTAND THIS IS A REAL PURCHASE"</li>
+                    </ol>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Warning */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <ExclamationTriangleIcon className="w-5 h-5 text-yellow-400 mt-0.5 mr-3" />
-                  <div>
-                    <h4 className="text-sm font-medium text-yellow-800">
-                      Important Note
-                    </h4>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      This number will be billed monthly and can be cancelled at
-                      any time. Additional charges may apply for usage beyond
-                      included limits.
-                    </p>
-                  </div>
-                </div>
+            {/* Confirmation Input */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Type the monthly cost (${number.price.amount.toFixed(2)})
+                </label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                  placeholder="Enter exact amount"
+                  onChange={(e) => {
+                    // Add validation logic here
+                  }}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Type "I UNDERSTAND THIS IS A REAL PURCHASE"
+                </label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                  placeholder="Type confirmation message"
+                  onChange={(e) => {
+                    // Add validation logic here
+                  }}
+                />
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex justify-end space-x-4 pt-4 border-t">
               <button
-                onClick={() =>
-                  setPurchaseConfirmation({ number: null, isOpen: false })
-                }
+                onClick={() => setPurchaseConfirmation({ number: null, isOpen: false })}
                 className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
               >
                 Cancel
@@ -364,7 +376,7 @@ export function PhoneNumberSelector() {
               <button
                 onClick={() => handlePurchaseNumber(number)}
                 disabled={loading}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center"
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center"
               >
                 {loading ? (
                   <>
@@ -373,8 +385,8 @@ export function PhoneNumberSelector() {
                   </>
                 ) : (
                   <>
-                    <ShoppingCartIcon className="w-4 h-4 mr-2" />
-                    Purchase Number
+                    <ExclamationTriangleIcon className="w-4 h-4 mr-2" />
+                    Confirm Real Purchase
                   </>
                 )}
               </button>

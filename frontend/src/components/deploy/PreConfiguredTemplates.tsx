@@ -6,6 +6,15 @@ interface Template {
   name: string
   icon: ReactNode
   description: string
+  subtypes?: Array<{
+    id: string
+    name: string
+    description: string
+    recommended?: boolean
+    beta?: boolean
+    recommendationReason?: string
+    betaMessage?: string
+  }>
 }
 
 interface PreConfiguredTemplatesProps {
@@ -32,9 +41,39 @@ export function PreConfiguredTemplates({ templates, onSelect }: PreConfiguredTem
               {template.icon}
             </div>
             <h4 className="text-lg font-bold mb-2 text-gray-900">{template.name}</h4>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 mb-4">
               {template.description}
             </p>
+            {template.subtypes?.map((subtype) => (
+              <div key={subtype.id} className="mt-3 p-3 border rounded-lg bg-white">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="font-medium">{subtype.name}</span>
+                  <div className="flex gap-2">
+                    {subtype.recommended && (
+                      <span className="recommended-badge">
+                        Recommended
+                      </span>
+                    )}
+                    {subtype.beta && (
+                      <span className="beta-badge">
+                        Beta
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600">{subtype.description}</p>
+                {subtype.recommendationReason && (
+                  <p className="mt-2 text-sm text-green-600">
+                    ✓ {subtype.recommendationReason}
+                  </p>
+                )}
+                {subtype.beta && (
+                  <p className="mt-2 text-sm text-yellow-600">
+                    ⓘ {subtype.betaMessage}
+                  </p>
+                )}
+              </div>
+            ))}
           </motion.button>
         ))}
       </div>
