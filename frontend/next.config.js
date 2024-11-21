@@ -50,7 +50,7 @@ const nextConfig = {
             bodySizeLimit: '2mb'
         }
     },
-    transpilePackages: ['@backend']
+    transpilePackages: ['@backend','backend']
 }
 
 module.exports = nextConfig

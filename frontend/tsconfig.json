@@ -21,7 +21,7 @@
       }
     ],
     "paths": {
-      "@backend/*": ["../backend/src/*"],
+      "@backend/*": ["./backend/src/*"],
       "@/*": ["./src/*"],
       "@shared/*": ["../../shared/*"]
     }
