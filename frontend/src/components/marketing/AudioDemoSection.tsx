@@ -1,9 +1,16 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { TRANSITIONS } from '@/lib/constants/animations'
 import Image from 'next/image'
+
+interface AudioPlayer {
+  audio: HTMLAudioElement | null
+  progressBar: HTMLDivElement | null
+  currentTimeSpan: HTMLSpanElement | null
+  isPlaying: boolean
+}
 
 const demoCards = [
   {
@@ -37,10 +44,88 @@ const demoCards = [
 
 export function AudioDemoSection() {
   const [isClient, setIsClient] = useState(false)
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null)
+  const audioPlayers = useRef<Record<string, AudioPlayer>>({})
 
   useEffect(() => {
     setIsClient(true)
+    // Initialize audio players for all demos
+    demoCards.forEach(demo => {
+      if (!audioPlayers.current[demo.audioId]) {
+        audioPlayers.current[demo.audioId] = {
+          audio: null,
+          progressBar: null,
+          currentTimeSpan: null,
+          isPlaying: false
+        }
+      }
+    })
   }, [])
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = Math.floor(seconds % 60)
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
+
+  const initializeAudioPlayer = (demoId: string) => {
+    if (!audioPlayers.current[demoId]?.audio) {
+      const audio = new Audio(`/audio/${demoId}.mp3`)
+      
+      audio.addEventListener('timeupdate', () => {
+        const player = audioPlayers.current[demoId]
+        if (player?.progressBar && player?.currentTimeSpan) {
+          const progress = (audio.currentTime / audio.duration) * 100
+          player.progressBar.style.width = `${progress}%`
+          player.currentTimeSpan.textContent = formatTime(audio.currentTime)
+        }
+      })
+
+      audio.addEventListener('ended', () => {
+        const player = audioPlayers.current[demoId]
+        if (player) {
+          player.isPlaying = false
+          setCurrentlyPlaying(null)
+          // Reset progress
+          if (player.progressBar) player.progressBar.style.width = '0%'
+          if (player.currentTimeSpan) player.currentTimeSpan.textContent = '0:00'
+        }
+      })
+
+      if (audioPlayers.current[demoId]) {
+        audioPlayers.current[demoId].audio = audio
+      }
+    }
+  }
+
+  const handlePlayPause = async (demoId: string) => {
+    // Initialize if not already done
+    initializeAudioPlayer(demoId)
+    
+    const player = audioPlayers.current[demoId]
+    if (!player) return
+    
+    // Stop any currently playing audio
+    if (currentlyPlaying && currentlyPlaying !== demoId) {
+      const currentPlayer = audioPlayers.current[currentlyPlaying]
+      if (currentPlayer) {
+        currentPlayer.audio?.pause()
+        currentPlayer.isPlaying = false
+        if (currentPlayer.progressBar) currentPlayer.progressBar.style.width = '0%'
+        if (currentPlayer.currentTimeSpan) currentPlayer.currentTimeSpan.textContent = '0:00'
+      }
+    }
+
+    if (!player.isPlaying) {
+      await player.audio?.play()
+      player.isPlaying = true
+      setCurrentlyPlaying(demoId)
+    } else {
+      player.audio?.pause()
+      player.isPlaying = false
+      setCurrentlyPlaying(null)
+    }
+  }
 
   return (
     <section className="py-20 bg-gradient-to-b from-gray-900 to-black relative overflow-hidden">
@@ -132,10 +217,13 @@ export function AudioDemoSection() {
                 </div>
 
                 {/* Play Button */}
-                <button className="absolute inset-0 m-auto w-16 h-16 bg-purple-600 border-[3px] border-white 
-                                flex items-center justify-center text-white transform group-hover:scale-110 
-                                transition-transform duration-300 hover:bg-purple-700">
-                  <i className="fas fa-play text-xl" />
+                <button 
+                  onClick={() => handlePlayPause(demo.audioId)}
+                  className="absolute inset-0 m-auto w-16 h-16 bg-purple-600 border-[3px] border-white 
+                          flex items-center justify-center text-white transform group-hover:scale-110 
+                          transition-transform duration-300 hover:bg-purple-700"
+                >
+                  <i className={`fas ${currentlyPlaying === demo.audioId ? 'fa-pause' : 'fa-play'} text-xl`} />
                 </button>
               </div>
               
@@ -157,14 +245,30 @@ export function AudioDemoSection() {
                 
                 <p className="text-gray-400">{demo.description}</p>
 
-                {/* Audio Progress (Hidden initially) */}
-                <div className="hidden audio-progress mt-4 space-y-2">
+                {/* Audio Progress */}
+                <div className={`audio-progress mt-4 space-y-2 ${currentlyPlaying === demo.audioId ? 'block' : 'hidden'}`}>
                   <div className="h-1 bg-gray-700">
-                    <div className="progress-bar h-full w-0 bg-gradient-to-r from-purple-500 to-blue-500 
-                                transition-all duration-300" />
+                    <div 
+                      ref={el => {
+                        if (el && audioPlayers.current[demo.audioId]) {
+                          audioPlayers.current[demo.audioId].progressBar = el
+                        }
+                      }}
+                      className="progress-bar h-full w-0 bg-gradient-to-r from-purple-500 to-blue-500 
+                              transition-all duration-300"
+                    />
                   </div>
                   <div className="flex justify-between text-sm text-gray-400">
-                    <span className="current-time">0:00</span>
+                    <span 
+                      ref={el => {
+                        if (el && audioPlayers.current[demo.audioId]) {
+                          audioPlayers.current[demo.audioId].currentTimeSpan = el
+                        }
+                      }}
+                      className="current-time"
+                    >
+                      0:00
+                    </span>
                     <span className="total-time">{demo.duration}</span>
                   </div>
                 </div>
