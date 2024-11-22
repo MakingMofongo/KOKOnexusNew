@@ -116,10 +116,10 @@ export function HeroSection() {
                 <span className="ml-2 text-sm opacity-75">(+1 339-499-7114)</span>
               </button>
               
-              <button className="boxy-button">
+              <Link href="/deploy" className="boxy-button">
                 <i className="fas fa-play mr-2" />
-                Watch Demo
-              </button>
+                Deploy Now
+              </Link>
             </motion.div>
           </motion.div>
 
