@@ -1,6 +1,6 @@
-import { Vapi } from '@vapi-ai/server-sdk';
+import { Vapi } from "@vapi-ai/server-sdk";
 // Remove SDK imports and define our own types
-export type MessageRole = 'system' | 'assistant' | 'user' | 'function';
+export type MessageRole = "system" | "assistant" | "user" | "function";
 
 export interface Message {
   role: MessageRole;
@@ -8,7 +8,14 @@ export interface Message {
 }
 
 // Voice provider types
-export type VoiceProvider = 'rime-ai' | 'azure' | 'deepgram' | 'eleven-labs' | 'lmnt' | 'neets' | 'playht';
+export type VoiceProvider =
+  | "rime-ai"
+  | "azure"
+  | "deepgram"
+  | "eleven-labs"
+  | "lmnt"
+  | "neets"
+  | "playht";
 
 interface BaseVoice {
   voiceId: string;
@@ -20,7 +27,7 @@ interface BaseVoice {
 }
 
 export interface RimeAiVoice extends BaseVoice {
-  provider: 'rime-ai';
+  provider: "rime-ai";
 }
 
 // Add other voice types as needed...
@@ -28,14 +35,18 @@ export interface RimeAiVoice extends BaseVoice {
 export type VoiceConfig = RimeAiVoice; // Union with other voice types when added
 
 // Add after the VoiceConfig type
-export type TranscriberProvider = 'custom-transcriber' | 'deepgram' | 'gladia' | 'talkscriber';
+export type TranscriberProvider =
+  | "custom-transcriber"
+  | "deepgram"
+  | "gladia"
+  | "talkscriber";
 
 export interface BaseTranscriberConfig {
   provider: TranscriberProvider;
 }
 
 export interface CustomTranscriberConfig extends BaseTranscriberConfig {
-  provider: 'custom-transcriber';
+  provider: "custom-transcriber";
   server: {
     url: string;
     timeoutSeconds?: number;
@@ -45,102 +56,115 @@ export interface CustomTranscriberConfig extends BaseTranscriberConfig {
 }
 
 export interface DeepgramTranscriberConfig extends BaseTranscriberConfig {
-  provider: 'deepgram';
+  provider: "deepgram";
   codeSwitchingEnabled?: boolean;
   endpointing?: number;
   keywords?: string[];
   language?: string;
-  model?: 'nova-2' | 'nova-2-general' | 'nova-2-meeting' | 'nova-2-phonecall' | 
-          'nova-2-finance' | 'nova-2-conversationalai' | 'nova-2-medical' | 
-          'enhanced' | 'enhanced-general' | 'enhanced-phonecall' | 'base' | 
-          'base-general' | 'base-phonecall';
+  model?:
+    | "nova-2"
+    | "nova-2-general"
+    | "nova-2-meeting"
+    | "nova-2-phonecall"
+    | "nova-2-finance"
+    | "nova-2-conversationalai"
+    | "nova-2-medical"
+    | "enhanced"
+    | "enhanced-general"
+    | "enhanced-phonecall"
+    | "base"
+    | "base-general"
+    | "base-phonecall";
   smartFormat?: boolean;
 }
 
 export enum GladiaLanguage {
-  AF = 'af', // Afrikaans
-  SQ = 'sq', // Albanian
-  AM = 'am', // Amharic
-  AR = 'ar', // Arabic
-  HY = 'hy', // Armenian
-  AS = 'as', // Assamese
-  AZ = 'az', // Azerbaijani
-  BA = 'ba', // Bashkir
-  EU = 'eu', // Basque
-  BE = 'be', // Belarusian
-  BN = 'bn', // Bengali
-  BS = 'bs', // Bosnian
-  BR = 'br', // Breton
-  BG = 'bg', // Bulgarian
-  CA = 'ca', // Catalan
-  ZH = 'zh', // Chinese
-  HR = 'hr', // Croatian
-  CS = 'cs', // Czech
-  DA = 'da', // Danish
-  NL = 'nl', // Dutch
-  EN = 'en', // English
-  ET = 'et', // Estonian
-  FO = 'fo', // Faroese
-  FI = 'fi', // Finnish
-  FR = 'fr', // French
-  GL = 'gl', // Galician
-  KA = 'ka', // Georgian
-  DE = 'de', // German
-  EL = 'el', // Greek
-  GU = 'gu', // Gujarati
-  HT = 'ht', // Haitian
-  HA = 'ha', // Hausa
-  HE = 'he', // Hebrew
-  HI = 'hi', // Hindi
-  HU = 'hu', // Hungarian
-  IS = 'is', // Icelandic
-  ID = 'id', // Indonesian
-  IT = 'it', // Italian
-  JA = 'ja', // Japanese
-  JV = 'jv', // Javanese
-  KN = 'kn', // Kannada
-  KK = 'kk', // Kazakh
-  KM = 'km', // Khmer
-  KO = 'ko', // Korean
-  LO = 'lo', // Lao
-  LA = 'la', // Latin
-  LV = 'lv', // Latvian
-  LT = 'lt', // Lithuanian
-  MK = 'mk', // Macedonian
-  MS = 'ms', // Malay
-  ML = 'ml', // Malayalam
-  MT = 'mt', // Maltese
-  MR = 'mr', // Marathi
-  MN = 'mn', // Mongolian
-  NE = 'ne', // Nepali
-  NO = 'no', // Norwegian
-  FA = 'fa', // Persian
-  PL = 'pl', // Polish
-  PT = 'pt', // Portuguese
-  PA = 'pa', // Punjabi
-  RO = 'ro', // Romanian
-  RU = 'ru', // Russian
-  SR = 'sr', // Serbian
-  SK = 'sk', // Slovak
-  SL = 'sl', // Slovenian
-  ES = 'es', // Spanish
-  SW = 'sw', // Swahili
-  SV = 'sv', // Swedish
-  TA = 'ta', // Tamil
-  TE = 'te', // Telugu
-  TH = 'th', // Thai
-  TR = 'tr', // Turkish
-  UK = 'uk', // Ukrainian
-  UR = 'ur', // Urdu
-  VI = 'vi', // Vietnamese
-  CY = 'cy', // Welsh
+  AF = "af", // Afrikaans
+  SQ = "sq", // Albanian
+  AM = "am", // Amharic
+  AR = "ar", // Arabic
+  HY = "hy", // Armenian
+  AS = "as", // Assamese
+  AZ = "az", // Azerbaijani
+  BA = "ba", // Bashkir
+  EU = "eu", // Basque
+  BE = "be", // Belarusian
+  BN = "bn", // Bengali
+  BS = "bs", // Bosnian
+  BR = "br", // Breton
+  BG = "bg", // Bulgarian
+  CA = "ca", // Catalan
+  ZH = "zh", // Chinese
+  HR = "hr", // Croatian
+  CS = "cs", // Czech
+  DA = "da", // Danish
+  NL = "nl", // Dutch
+  EN = "en", // English
+  ET = "et", // Estonian
+  FO = "fo", // Faroese
+  FI = "fi", // Finnish
+  FR = "fr", // French
+  GL = "gl", // Galician
+  KA = "ka", // Georgian
+  DE = "de", // German
+  EL = "el", // Greek
+  GU = "gu", // Gujarati
+  HT = "ht", // Haitian
+  HA = "ha", // Hausa
+  HE = "he", // Hebrew
+  HI = "hi", // Hindi
+  HU = "hu", // Hungarian
+  IS = "is", // Icelandic
+  ID = "id", // Indonesian
+  IT = "it", // Italian
+  JA = "ja", // Japanese
+  JV = "jv", // Javanese
+  KN = "kn", // Kannada
+  KK = "kk", // Kazakh
+  KM = "km", // Khmer
+  KO = "ko", // Korean
+  LO = "lo", // Lao
+  LA = "la", // Latin
+  LV = "lv", // Latvian
+  LT = "lt", // Lithuanian
+  MK = "mk", // Macedonian
+  MS = "ms", // Malay
+  ML = "ml", // Malayalam
+  MT = "mt", // Maltese
+  MR = "mr", // Marathi
+  MN = "mn", // Mongolian
+  NE = "ne", // Nepali
+  NO = "no", // Norwegian
+  FA = "fa", // Persian
+  PL = "pl", // Polish
+  PT = "pt", // Portuguese
+  PA = "pa", // Punjabi
+  RO = "ro", // Romanian
+  RU = "ru", // Russian
+  SR = "sr", // Serbian
+  SK = "sk", // Slovak
+  SL = "sl", // Slovenian
+  ES = "es", // Spanish
+  SW = "sw", // Swahili
+  SV = "sv", // Swedish
+  TA = "ta", // Tamil
+  TE = "te", // Telugu
+  TH = "th", // Thai
+  TR = "tr", // Turkish
+  UK = "uk", // Ukrainian
+  UR = "ur", // Urdu
+  VI = "vi", // Vietnamese
+  CY = "cy", // Welsh
 }
 
-export type GladiaLanguageBehaviour = 'manual' | 'automatic single language' | 'automatic multiple languages';
-export type GladiaModel = 'fast' | 'accurate';
+export type GladiaLanguageBehaviour =
+  | "manual"
+  | "automatic single language"
+  | "automatic multiple languages";
+export type GladiaModel = "fast" | "accurate";
 
-export interface GladiaTranscriberConfig {
-  provider: 'gladia';
+export interface GladiaTranscriberConfig extends BaseTranscriberConfig {
+  provider: "gladia";
   audioEnhancer?: boolean;
   language?: GladiaLanguage;
   languageBehaviour?: GladiaLanguageBehaviour;
@@ -150,15 +174,15 @@ export interface GladiaTranscriberConfig {
 }
 
 export interface TalkScriberConfig extends BaseTranscriberConfig {
-  provider: 'talkscriber';
+  provider: "talkscriber";
   language?: string;
-  model?: 'whisper';
+  model?: "whisper";
 }
 
-export type TranscriberConfig = 
-  | CustomTranscriberConfig 
-  | DeepgramTranscriberConfig 
-  | GladiaTranscriberConfig 
+export type TranscriberConfig =
+  | CustomTranscriberConfig
+  | DeepgramTranscriberConfig
+  | GladiaTranscriberConfig
   | TalkScriberConfig;
 
 // Types for assistant-related data
@@ -213,16 +237,30 @@ export interface UpdateAssistantResponse {
 }
 
 // Update the DTO to match SDK expectations
-export interface UpdateAssistantDto extends Omit<Vapi.UpdateAssistantDto, 'transcriber'> {
+export interface UpdateAssistantDto
+  extends Omit<Vapi.UpdateAssistantDto, "transcriber"> {
   transcriber?: TranscriberConfig;
 }
 
 export type UpdateAssistantPayload = UpdateAssistantDto;
 
-export type VapiAssistantProvider = 'vapi' | 'openai' | 'anthropic' | 'google' | 'groq' | 'anyscale' | 'deepinfra' | 'perplexity' | 'together' | 'openrouter';
-export type VapiVoiceProvider = 'cartesia' | '11labs' | 'rime-ai';
-export type VapiBackgroundSound = 'off' | 'office';
-export type VapiFirstMessageMode = 'assistant-speaks-first' | 'assistant-speaks-first-with-model-generated-message' | 'assistant-waits-for-user';
+export type VapiAssistantProvider =
+  | "vapi"
+  | "openai"
+  | "anthropic"
+  | "google"
+  | "groq"
+  | "anyscale"
+  | "deepinfra"
+  | "perplexity"
+  | "together"
+  | "openrouter";
+export type VapiVoiceProvider = "cartesia" | "11labs" | "rime-ai";
+export type VapiBackgroundSound = "off" | "office";
+export type VapiFirstMessageMode =
+  | "assistant-speaks-first"
+  | "assistant-speaks-first-with-model-generated-message"
+  | "assistant-waits-for-user";
 
 export interface VapiAssistantModel {
   provider: VapiAssistantProvider;
@@ -231,7 +269,7 @@ export interface VapiAssistantModel {
   maxTokens?: number;
   emotionRecognitionEnabled?: boolean;
   messages?: Array<{
-    role: 'assistant' | 'function' | 'user' | 'system' | 'tool';
+    role: "assistant" | "function" | "user" | "system" | "tool";
     content?: string;
   }>;
   numFastTurns?: number;
@@ -241,7 +279,11 @@ export interface VapiAssistantModel {
 export interface VapiVoiceConfig {
   provider: VapiVoiceProvider;
   voiceId: string;
-  model?: 'eleven_multilingual_v2' | 'eleven_turbo_v2' | 'eleven_turbo_v2_5' | 'eleven_monolingual_v1';
+  model?:
+    | "eleven_multilingual_v2"
+    | "eleven_turbo_v2"
+    | "eleven_turbo_v2_5"
+    | "eleven_monolingual_v1";
   chunkPlan?: {
     enabled?: boolean;
     minCharacters?: number;
@@ -294,4 +336,7 @@ export interface VapiAssistant extends VapiAssistantConfig {
   orgId: string;
   createdAt: string;
   updatedAt: string;
-} 
+}
+
+// Create a type specifically for Gladia requests that omits the language field
+export type GladiaRequestBody = Omit<Assistant, "language">;
