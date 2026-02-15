@@ -80,7 +80,7 @@ export function HeroSection() {
               {[
                 { icon: 'fa-language', text: 'Instant Language Switching' },
                 { icon: 'fa-bolt', text: '2.5s Response Time' },
-                { icon: 'fa-globe', text: '95+ Languages' }
+                { icon: 'fa-globe', text: '100+ Languages' }
               ].map((feature) => (
                 <div key={feature.text} className="boxy-badge">
                   <i className={`fas ${feature.icon} mr-2`} />

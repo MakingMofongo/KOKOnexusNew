@@ -184,7 +184,7 @@ export function TestimonialsSection() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { value: '1M+', label: 'Calls Handled' },
-              { value: '95+', label: 'Languages' },
+              { value: '100+', label: 'Languages' },
               { value: '99.9%', label: 'Uptime' },
               { value: '98%', label: 'Satisfaction' }
             ].map((stat, index) => (

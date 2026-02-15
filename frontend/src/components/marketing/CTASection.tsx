@@ -113,7 +113,7 @@ export function CTASection() {
               {[
                 { value: '2min', label: 'Average Deploy Time', icon: 'fa-clock' },
                 { value: '15+', label: 'Industry Templates', icon: 'fa-layer-group' },
-                { value: '95+', label: 'Languages', icon: 'fa-language' },
+                { value: '100+', label: 'Languages', icon: 'fa-language' },
                 { value: '1M+', label: 'Calls Handled', icon: 'fa-phone-volume' }
               ].map((stat, index) => (
                 <motion.div

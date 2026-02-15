@@ -4,9 +4,6 @@ const path = require('path')
 const nextConfig = {
     reactStrictMode: true,
     images: {
-        domains: [
-            'images.unsplash.com'
-        ],
         remotePatterns: [
             {
                 protocol: 'https',
@@ -21,6 +18,11 @@ const nextConfig = {
             '@backend': path.join(__dirname, '/backend/src')
         }
         return config
+    },
+    turbopack: {
+        resolveAlias: {
+            '@backend': path.join(__dirname, '/backend/src'),
+        },
     },
     async rewrites() {
         return [

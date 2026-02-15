@@ -1,268 +1,362 @@
 'use client'
 
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { SPRING } from '@/lib/constants/animations'
-import Image from 'next/image'
 
-const features = [
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const pipeline = [
   {
-    title: 'Neural Voice Engine',
-    category: 'Voice Technology',
-    description: 'Ultra-realistic voice synthesis powered by Eleven Labs',
-    icon: 'fa-waveform-lines',
-    color: 'purple',
-    demo: {
-      image: 'https://images.unsplash.com/photo-1589254065878-42c9da997008?ixlib=rb-4.0.3',
-      title: 'Voice Synthesis',
-      caption: 'Powered by Eleven Labs v2'
-    },
-    metrics: [
-      { value: '99.8%', label: 'Natural Speech', icon: 'fa-wave-square' },
-      { value: '<50ms', label: 'Latency', icon: 'fa-bolt' },
-      { value: '95+', label: 'Voices', icon: 'fa-microphone' }
-    ],
-    techSpecs: [
-      { title: 'Voice Model', value: 'Eleven Labs v2', icon: 'fa-wave-square' },
-      { title: 'Voice Cloning', value: 'Supported', icon: 'fa-clone' },
-      { title: 'Emotion Control', value: 'Advanced', icon: 'fa-face-smile' },
-      { title: 'Streaming', value: 'Real-time', icon: 'fa-broadcast-tower' }
-    ],
-    capabilities: [
-      'Instant Voice Cloning',
-      'Emotional Intelligence',
-      'Multi-speaker Synthesis',
-      'Real-time Streaming',
-      'Voice Design Studio',
-      'Custom Voice Training'
-    ]
+    id: 'ingest',
+    label: 'Voice In',
+    icon: 'fa-microphone',
+    color: '#a78bfa',       // purple-400
+    description: 'Caller speaks in any language — audio streams in real-time via WebSocket.',
+    detail: 'Raw PCM 16-bit @ 16 kHz · chunked every 20 ms',
   },
   {
-    title: 'Language Processing',
-    category: 'AI & ML',
-    description: 'Custom language detection model with Deepgram transcription',
+    id: 'transcribe',
+    label: 'Transcribe',
+    icon: 'fa-file-audio',
+    color: '#60a5fa',       // blue-400
+    provider: 'Deepgram Nova-3',
+    description: 'Streaming speech-to-text with word-level timestamps, punctuation, and multilingual keyterm prompting.',
+    detail: '< 300 ms latency · 100+ languages · speaker diarization · code-switching',
+    stat: { value: '< 300ms', label: 'latency' },
+  },
+  {
+    id: 'detect',
+    label: 'Detect Language',
     icon: 'fa-language',
-    color: 'blue',
-    demo: {
-      image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3',
-      title: 'Language Intelligence',
-      caption: 'Neural language detection & transcription'
-    },
-    metrics: [
-      { value: '95+', label: 'Languages', icon: 'fa-language' },
-      { value: '0.2s', label: 'Detection', icon: 'fa-bolt' },
-      { value: '99.2%', label: 'Accuracy', icon: 'fa-bullseye' }
-    ],
-    techSpecs: [
-      { title: 'Speech-to-Text', value: 'Deepgram Nova', icon: 'fa-file-audio' },
-      { title: 'Detection', value: 'Custom Model', icon: 'fa-brain' },
-      { title: 'Transcription', value: 'Real-time', icon: 'fa-clock' },
-      { title: 'Context', value: 'Preserved', icon: 'fa-link' }
-    ],
-    capabilities: [
-      'Real-time Transcription',
-      'Language Detection',
-      'Accent Recognition',
-      'Context Preservation',
-      'Cultural Adaptation',
-      'Semantic Analysis'
-    ]
+    color: '#34d399',       // emerald-400
+    provider: 'Custom Model',
+    description: 'Proprietary classifier identifies the spoken language in under 200 ms — mid-sentence.',
+    detail: '100+ languages · 99.2 % accuracy · context-aware switching',
+    stat: { value: '0.2s', label: 'detection' },
   },
   {
-    title: 'Speech Recognition',
-    category: 'Audio Processing',
-    description: 'High-accuracy speech recognition with Gladia',
-    icon: 'fa-ear-listen',
-    color: 'green',
-    demo: {
-      image: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3',
-      title: 'Speech Recognition',
-      caption: 'Powered by Gladia AI'
-    },
-    metrics: [
-      { value: '99%', label: 'Accuracy', icon: 'fa-check-circle' },
-      { value: '<1s', label: 'Processing', icon: 'fa-clock' },
-      { value: '40+', label: 'Accents', icon: 'fa-globe' }
-    ],
-    techSpecs: [
-      { title: 'Engine', value: 'Gladia AI', icon: 'fa-microphone' },
-      { title: 'Processing', value: 'Streaming', icon: 'fa-stream' },
-      { title: 'Noise Cancel', value: 'Advanced', icon: 'fa-volume-slash' },
-      { title: 'Diarization', value: 'Real-time', icon: 'fa-users' }
-    ],
-    capabilities: [
-      'Noise Cancellation',
-      'Speaker Diarization',
-      'Accent Detection',
-      'Punctuation',
-      'Word Timestamps',
-      'Confidence Scores'
-    ]
-  }
+    id: 'reason',
+    label: 'Reason',
+    icon: 'fa-brain',
+    color: '#f472b6',       // pink-400
+    provider: 'GPT-5',
+    description: 'LLM generates a context-aware response using the business knowledge base with built-in reasoning.',
+    detail: 'Function calling · tool use · memory across turns · native reasoning',
+    stat: { value: '~600ms', label: 'reasoning' },
+  },
+  {
+    id: 'synthesize',
+    label: 'Voice Out',
+    icon: 'fa-waveform-lines',
+    color: '#fbbf24',       // amber-400
+    provider: 'ElevenLabs v3',
+    description: 'Text-to-speech streams back in the detected language with expressive prosody and emotion control.',
+    detail: 'Voice cloning · audio tags · multi-speaker · 70+ languages',
+    stat: { value: '< 50ms', label: 'first byte' },
+  },
 ]
 
-const colorVariants = {
-  purple: 'border-purple-500 text-purple-400 bg-purple-900/20',
-  blue: 'border-blue-500 text-blue-400 bg-blue-900/20',
-  green: 'border-green-500 text-green-400 bg-green-900/20'
+// ─── Animated waveform bar ──────────────────────────────────────────────────
+
+function WaveBar({ color, delay }: { color: string; delay: number }) {
+  return (
+    <motion.div
+      className="w-[3px] rounded-full origin-bottom"
+      style={{ backgroundColor: color }}
+      animate={{
+        height: ['12px', '28px', '8px', '22px', '14px'],
+      }}
+      transition={{
+        duration: 1.6,
+        repeat: Infinity,
+        repeatType: 'mirror',
+        ease: 'easeInOut',
+        delay,
+      }}
+    />
+  )
 }
 
+// ─── Main Component ─────────────────────────────────────────────────────────
+
 export function FeaturesSection() {
-  const [activeFeature, setActiveFeature] = useState(0)
+  const [activeStep, setActiveStep] = useState(0)
+  const [isAutoplaying, setIsAutoplaying] = useState(true)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Autoplay through the pipeline
+  useEffect(() => {
+    if (!isAutoplaying) return
+    intervalRef.current = setInterval(() => {
+      setActiveStep((prev) => (prev + 1) % pipeline.length)
+    }, 3200)
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [isAutoplaying])
+
+  const handleStepClick = (index: number) => {
+    setActiveStep(index)
+    setIsAutoplaying(false)
+    // Resume autoplay after 10 s of inactivity
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    intervalRef.current = setTimeout(() => setIsAutoplaying(true), 10_000) as any
+  }
+
+  const active = pipeline[activeStep]
 
   return (
-    <section className="py-32 relative overflow-hidden bg-gray-900" id="features">
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 grid-bg opacity-10" />
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-blue-900/20" />
+    <section className="py-32 relative overflow-hidden bg-gray-950" id="features">
+      {/* ── Background ──────────────────────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 grid-bg opacity-[0.04]" />
+        {/* Subtle radial glow following active colour */}
+        <motion.div
+          className="absolute w-[600px] h-[600px] rounded-full blur-[160px] opacity-20 -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
+          animate={{ backgroundColor: active.color }}
+          transition={{ duration: 1 }}
+        />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
+        {/* ── Header ────────────────────────────────────────────────── */}
         <div className="text-center mb-20">
           <motion.div
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-white/5 border-[3px] border-purple-500 mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 border-[3px] border-purple-500/40 bg-purple-500/5 mb-6"
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ ...SPRING, delay: 0.1 }}
           >
-            <i className="fas fa-microchip text-purple-400" />
-            <span className="text-sm font-medium text-purple-400">
-              Technical Specifications
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500" />
+            </span>
+            <span className="text-sm font-mono text-purple-400 tracking-wide uppercase">
+              Under the Hood
             </span>
           </motion.div>
 
-          <motion.h2 
-            className="text-4xl md:text-5xl font-bold mb-6 text-white"
+          <motion.h2
+            className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ ...SPRING, delay: 0.15 }}
+          >
+            One Call,{' '}
+            <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent">
+              Five Models
+            </span>
+          </motion.h2>
+
+          <motion.p
+            className="text-gray-500 max-w-2xl mx-auto text-lg"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ ...SPRING, delay: 0.2 }}
           >
-            Enterprise-Grade Technology
-          </motion.h2>
+            Every phone call flows through a real-time AI pipeline — from raw audio to intelligent response in under 2 seconds.
+          </motion.p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid lg:grid-cols-2 gap-12">
-          {/* Feature Navigation */}
-          <div className="space-y-6">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                className={`group relative p-6 cursor-pointer transition-all duration-300
-                         border-[3px] ${activeFeature === index ? 'bg-white/10 border-purple-500' : 'border-white/10 hover:border-purple-500/50'}`}
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ ...SPRING, delay: index * 0.1 }}
-                onClick={() => setActiveFeature(index)}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 border-2 border-purple-500 flex items-center justify-center">
-                    <i className={`fas ${feature.icon} text-2xl text-purple-400`} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm text-purple-400 mb-1">{feature.category}</div>
-                    <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                    <p className="text-gray-400">{feature.description}</p>
-                  </div>
-                </div>
+        {/* ── Pipeline Visualisation ────────────────────────────────── */}
+        <div className="grid lg:grid-cols-[280px_1fr] gap-8 lg:gap-12 items-start">
 
-                {/* Technical Metrics */}
-                <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/10">
-                  {feature.metrics.map((metric) => (
-                    <div key={metric.label} className="text-center group">
-                      <div className="text-xl font-bold text-white mb-1 flex items-center justify-center gap-2">
-                        <i className={`fas ${metric.icon} text-purple-400 group-hover:scale-110 transition-transform`} />
-                        {metric.value}
-                      </div>
-                      <div className="text-sm text-gray-500">{metric.label}</div>
+          {/* Left: Step list */}
+          <div>
+            <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 no-scrollbar">
+              {pipeline.map((step, i) => {
+                const isActive = i === activeStep
+                return (
+                  <motion.button
+                    key={step.id}
+                    onClick={() => handleStepClick(i)}
+                    className={`
+                      relative flex items-center gap-3 px-4 py-3 text-left transition-all duration-300
+                      border-[2px] min-w-[180px] lg:min-w-0
+                      ${isActive
+                        ? 'border-current bg-white/[0.06]'
+                        : 'border-white/[0.06] hover:border-white/20 bg-transparent'}
+                    `}
+                    style={{ color: isActive ? step.color : undefined }}
+                    initial={{ opacity: 0, x: -30 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ ...SPRING, delay: i * 0.07 }}
+                  >
+                    {/* Step number */}
+                    <div
+                      className={`
+                        w-10 h-10 flex items-center justify-center text-sm font-bold font-mono
+                        border-2 shrink-0 transition-all duration-300 z-10
+                        ${isActive ? 'border-current bg-current/10' : 'border-white/10 text-white/30'}
+                      `}
+                      style={isActive ? { borderColor: step.color, color: step.color } : {}}
+                    >
+                      {String(i + 1).padStart(2, '0')}
                     </div>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
+
+                    <div className="flex flex-col">
+                      <span className={`text-sm font-bold tracking-wide transition-colors duration-300 ${isActive ? '' : 'text-white/50'}`}>
+                        {step.label}
+                      </span>
+                      {step.provider && (
+                        <span className={`text-[11px] font-mono transition-colors duration-300 ${isActive ? 'opacity-70' : 'text-white/20'}`}>
+                          {step.provider}
+                        </span>
+                      )}
+                    </div>
+                  </motion.button>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Technical Details */}
-          <div className="relative">
+          {/* Right: Active step detail panel */}
+          <div className="min-h-[520px]">
+          <AnimatePresence mode="wait">
             <motion.div
-              className="sticky top-8 space-y-8"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={SPRING}
+              key={active.id}
+              className="border-[3px] bg-white/[0.02] relative overflow-hidden"
+              style={{ borderColor: `${active.color}40` }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
-              {/* Technical Visualization */}
-              <div className="relative aspect-video overflow-hidden border-[3px] border-purple-500">
-                <Image
-                  src={features[activeFeature].demo.image}
-                  alt={features[activeFeature].demo.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <h4 className="text-xl font-bold text-white mb-2">
-                    {features[activeFeature].demo.title}
-                  </h4>
-                  <p className="text-white/80">
-                    {features[activeFeature].demo.caption}
-                  </p>
-                </div>
-              </div>
+              {/* Top accent bar */}
+              <motion.div
+                className="h-[3px] w-full"
+                style={{ backgroundColor: active.color }}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+              />
 
-              {/* Technical Specifications */}
-              <div className="bg-white/5 border-[3px] border-purple-500 p-6">
-                <h4 className="text-lg font-bold text-white mb-6">Technical Specifications</h4>
-                <div className="grid grid-cols-2 gap-6">
-                  {features[activeFeature].techSpecs.map((spec) => (
-                    <div key={spec.title} className="flex items-center gap-3 group">
-                      <div className="w-10 h-10 border-2 border-purple-500 flex items-center justify-center">
-                        <i className={`fas ${spec.icon} text-purple-400 group-hover:scale-110 transition-transform`} />
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-400">{spec.title}</div>
-                        <div className="text-white font-mono">{spec.value}</div>
-                      </div>
+              <div className="p-8 md:p-10">
+                {/* Step header */}
+                <div className="flex items-start justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="w-14 h-14 border-[3px] flex items-center justify-center"
+                      style={{ borderColor: active.color }}
+                    >
+                      <i className={`fas ${active.icon} text-2xl`} style={{ color: active.color }} />
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Capabilities Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                {features[activeFeature].capabilities.map((capability) => (
-                  <div key={capability} className="flex items-center gap-2 p-4 bg-white/5 border border-purple-500/20">
-                    <div className="w-4 h-4 border-2 border-purple-500 flex items-center justify-center">
-                      <i className="fas fa-check text-xs text-purple-400" />
+                    <div>
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-2xl md:text-3xl font-bold text-white">{active.label}</h3>
+                        {active.provider && (
+                          <span
+                            className="text-[11px] font-mono px-2 py-1 border"
+                            style={{ borderColor: `${active.color}50`, color: active.color }}
+                          >
+                            {active.provider}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-400 mt-1 text-lg">{active.description}</p>
                     </div>
-                    <span className="text-gray-400 text-sm">{capability}</span>
                   </div>
-                ))}
-              </div>
-
-              {/* Live Demo Button */}
-              <motion.button
-                className="w-full p-4 bg-purple-500/20 border-[3px] border-purple-500 
-                         hover:bg-purple-500/30 transition-colors duration-300 group"
-                whileHover={{ x: 4 }}
-                onClick={() => window.location.href='tel:+17755713834'}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <i className="fas fa-phone-volume text-purple-400 group-hover:animate-pulse" />
-                    <span className="text-white">Experience Live Demo</span>
-                  </div>
-                  <i className="fas fa-arrow-right text-purple-400" />
                 </div>
-              </motion.button>
+
+                {/* Detail & waveform row */}
+                <div className="flex flex-col md:flex-row gap-8">
+                  {/* Technical detail card */}
+                  <div className="flex-1 p-5 border-[2px] border-white/[0.06] bg-white/[0.02]">
+                    <div className="flex items-center gap-2 mb-3">
+                      <i className="fas fa-terminal text-xs" style={{ color: active.color }} />
+                      <span className="text-[11px] font-mono text-white/40 uppercase tracking-widest">Specs</span>
+                    </div>
+                    <p className="text-white/70 font-mono text-sm leading-relaxed">{active.detail}</p>
+
+                    {active.stat && (
+                      <div className="mt-5 pt-5 border-t border-white/[0.06] flex items-baseline gap-3">
+                        <span className="text-3xl font-bold font-mono" style={{ color: active.color }}>
+                          {active.stat.value}
+                        </span>
+                        <span className="text-white/30 text-sm font-mono">{active.stat.label}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Waveform visualization */}
+                  <div className="flex-1 p-5 border-[2px] border-white/[0.06] bg-white/[0.02] flex flex-col items-center justify-center min-h-[140px]">
+                    <div className="flex items-end gap-[3px] h-10 mb-4">
+                      {Array.from({ length: 24 }).map((_, i) => (
+                        <WaveBar key={i} color={active.color} delay={i * 0.06} />
+                      ))}
+                    </div>
+                    <span className="text-[11px] font-mono text-white/20 uppercase tracking-widest">
+                      Live Signal
+                    </span>
+                  </div>
+                </div>
+
+                {/* Pipeline position indicator */}
+                <div className="mt-8 pt-6 border-t border-white/[0.06]">
+                  <div className="flex items-center gap-1">
+                    {pipeline.map((step, i) => (
+                      <div key={step.id} className="flex items-center gap-1 flex-1">
+                        <div className="flex-1 flex items-center">
+                          <motion.div
+                            className="h-1 w-full origin-left"
+                            style={{
+                              backgroundColor: i <= activeStep ? step.color : 'rgba(255,255,255,0.06)',
+                            }}
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            transition={{ duration: 0.3, delay: i * 0.05 }}
+                          />
+                        </div>
+                        {i < pipeline.length - 1 && (
+                          <i
+                            className="fas fa-chevron-right text-[8px]"
+                            style={{ color: i < activeStep ? pipeline[i + 1].color : 'rgba(255,255,255,0.1)' }}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <span className="text-[10px] font-mono text-white/20">AUDIO IN</span>
+                    <span className="text-[10px] font-mono text-white/20">RESPONSE OUT</span>
+                  </div>
+                </div>
+              </div>
             </motion.div>
+          </AnimatePresence>
           </div>
         </div>
+
+        {/* ── Bottom Stats Row ──────────────────────────────────────── */}
+        <motion.div
+          className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ ...SPRING, delay: 0.3 }}
+        >
+          {[
+            { value: '< 2s', label: 'End-to-end latency', icon: 'fa-bolt' },
+            { value: '100+', label: 'Languages supported', icon: 'fa-globe' },
+            { value: '99.9%', label: 'Uptime SLA', icon: 'fa-shield-halved' },
+            { value: '5', label: 'AI models per call', icon: 'fa-layer-group' },
+          ].map((stat, i) => (
+            <div
+              key={stat.label}
+              className="p-5 border-[2px] border-white/[0.06] bg-white/[0.02] text-center group hover:border-purple-500/30 transition-colors duration-300"
+            >
+              <i className={`fas ${stat.icon} text-purple-500/40 group-hover:text-purple-400 transition-colors text-sm mb-2 block`} />
+              <div className="text-2xl md:text-3xl font-bold font-mono text-white mb-1">{stat.value}</div>
+              <div className="text-[11px] font-mono text-white/30 uppercase tracking-wider">{stat.label}</div>
+            </div>
+          ))}
+        </motion.div>
       </div>
     </section>
   )
-} 
+}
