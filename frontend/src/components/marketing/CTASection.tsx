@@ -149,10 +149,10 @@ export function CTASection() {
         >
           <div className="flex items-center gap-4">
             <i className="fas fa-phone-volume text-white text-xl animate-pulse" />
-            <span className="text-white">Try our live demo: +1 339-499-7114</span>
+            <span className="text-white">Try our live demo: +1 (775) 571-3834</span>
           </div>
           <button 
-            onClick={() => window.location.href='tel:+13394997114'}
+            onClick={() => window.location.href='tel:+17755713834'}
             className="px-6 py-2 bg-white text-purple-600 font-bold border-[3px] border-white 
                      hover:bg-transparent hover:text-white transition-all duration-200"
           >

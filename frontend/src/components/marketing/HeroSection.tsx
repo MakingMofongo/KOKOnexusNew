@@ -108,12 +108,12 @@ export function HeroSection() {
               transition={{ ...TRANSITIONS, delay: 0.6 }}
             >
               <button 
-                onClick={() => window.location.href='tel:+13394997114'}
+                onClick={() => window.location.href='tel:+17755713834'}
                 className="boxy-button-filled"
               >
                 <i className="fas fa-phone-volume mr-2" />
                 <span>Try Live Demo</span>
-                <span className="ml-2 text-sm opacity-75">(+1 339-499-7114)</span>
+                <span className="ml-2 text-sm opacity-75">(+1 (775) 571-3834)</span>
               </button>
               
               <Link href="/deploy" className="boxy-button">

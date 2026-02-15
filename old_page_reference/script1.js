@@ -251,7 +251,7 @@ window.addEventListener('load', () => {
 
 // Handle phone call
 function handlePhoneCall() {
-    window.location.href = 'tel:+13394997114';
+    window.location.href = 'tel:+17755713834';
 }
 
 // Add this to handle the FAQ section

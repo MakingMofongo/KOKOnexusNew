@@ -12,7 +12,7 @@ export function FloatingCTA() {
       transition={{ delay: 1 }}
     >
       <a 
-        href="tel:+13394997114"
+        href="tel:+17755713834"
         className="flex items-center gap-2 px-6 py-3 bg-koko-600 text-white rounded-full 
                  shadow-lg hover:bg-koko-700 transition-all group"
       >

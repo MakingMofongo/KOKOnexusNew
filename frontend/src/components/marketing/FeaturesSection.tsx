@@ -249,7 +249,7 @@ export function FeaturesSection() {
                 className="w-full p-4 bg-purple-500/20 border-[3px] border-purple-500 
                          hover:bg-purple-500/30 transition-colors duration-300 group"
                 whileHover={{ x: 4 }}
-                onClick={() => window.location.href='tel:+13394997114'}
+                onClick={() => window.location.href='tel:+17755713834'}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
