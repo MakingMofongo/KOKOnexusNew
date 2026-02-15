@@ -12,13 +12,6 @@ const nextConfig = {
             },
         ],
     },
-    webpack: (config) => {
-        config.resolve.alias = {
-            ...config.resolve.alias,
-            '@backend': path.join(__dirname, '/backend/src')
-        }
-        return config
-    },
     turbopack: {
         resolveAlias: {
             '@backend': path.join(__dirname, '/backend/src'),
@@ -47,10 +40,8 @@ const nextConfig = {
             },
         ]
     },
-    experimental: {
-        serverActions: {
-            bodySizeLimit: '2mb'
-        }
+    serverActions: {
+        bodySizeLimit: '2mb'
     },
     transpilePackages: ['@backend','backend']
 }

@@ -149,7 +149,7 @@ async function configureGladiaTranscriber(): Promise<GladiaTranscriberConfig> {
       name: 'language',
       message: 'Select language:\n' + languageColumns,
       choices: languageChoices,
-      when: (answers) => answers.languageBehaviour === 'manual',
+      when: (answers: any) => answers.languageBehaviour === 'manual',
       pageSize: 20
     },
     {
@@ -184,7 +184,7 @@ async function configureGladiaTranscriber(): Promise<GladiaTranscriberConfig> {
         return true;
       }
     }
-  ]);
+  ] as any);
 
   // Build the configuration object
   const config: GladiaTranscriberConfig = {
