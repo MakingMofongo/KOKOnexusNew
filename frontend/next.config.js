@@ -40,8 +40,10 @@ const nextConfig = {
             },
         ]
     },
-    serverActions: {
-        bodySizeLimit: '2mb'
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '2mb'
+        }
     },
     transpilePackages: ['@backend','backend']
 }

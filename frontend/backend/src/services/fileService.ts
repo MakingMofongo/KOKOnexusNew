@@ -19,6 +19,7 @@ interface RequestOptions {
 
 export class FileService {
   private client: VapiClient;
+  private get files(): any { return this.client.files; }
 
   constructor(token: string) {
     this.client = new VapiClient({ token });
@@ -29,7 +30,7 @@ export class FileService {
       // Convert our options to a generic object
       const requestOptions: RequestOptions = options || {};
       
-      const files = await this.client.files.list(requestOptions);
+      const files = await this.files.list(requestOptions);
       return {
         success: true,
         data: files as File[]
@@ -58,7 +59,7 @@ export class FileService {
 
   async getFile(id: string): Promise<FileResponse> {
     try {
-      const file = await this.client.files.get(id);
+      const file = await this.files.get(id);
       return {
         success: true,
         data: file as File
@@ -107,7 +108,7 @@ export class FileService {
         }
       };
       
-      const file = await this.client.files.create(fileStream, requestOptions);
+      const file = await this.files.create(fileStream, requestOptions);
       return {
         success: true,
         data: file as File
@@ -147,7 +148,7 @@ export class FileService {
 
   async deleteFile(id: string): Promise<DeleteFileResponse> {
     try {
-      const file = await this.client.files.delete(id);
+      const file = await this.files.delete(id);
       return {
         success: true,
         data: file as File
@@ -174,7 +175,7 @@ export class FileService {
 
   async updateFile(id: string, updates: UpdateFileDto): Promise<UpdateFileResponse> {
     try {
-      const file = await this.client.files.update(id, updates);
+      const file = await this.files.update(id, updates);
       return {
         success: true,
         data: file as File

@@ -6,13 +6,13 @@ export const TRANSITIONS = {
 }
 
 export const SPRING = {
-  type: "spring",
+  type: "spring" as const,
   stiffness: 400,
   damping: 25
 }
 
 export const HOVER_SPRING = {
-  type: "spring",
+  type: "spring" as const,
   stiffness: 500,
   damping: 15
 }

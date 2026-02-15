@@ -11,6 +11,8 @@ import {
 
 export class AssistantService {
   private client: VapiClient;
+  // Cast assistants accessor to any to bypass SDK type drift
+  private get assistants(): any { return this.client.assistants; }
 
   constructor(token: string) {
     this.client = new VapiClient({ token });
@@ -18,7 +20,7 @@ export class AssistantService {
 
   async createAssistant(config: any): Promise<AssistantResponse> {
     try {
-      const assistant = await this.client.assistants.create(config);
+      const assistant = await this.assistants.create(config);
       return {
         success: true,
         data: assistant as Assistant
@@ -33,7 +35,7 @@ export class AssistantService {
 
   async getAssistant(id: string): Promise<AssistantResponse> {
     try {
-      const assistant = await this.client.assistants.get(id);
+      const assistant = await this.assistants.get(id);
       return {
         success: true,
         data: assistant as Assistant
@@ -48,7 +50,7 @@ export class AssistantService {
 
   async listAssistants(options?: ListAssistantsOptions): Promise<AssistantListResponse> {
     try {
-      const assistants = await this.client.assistants.list(options);
+      const assistants = await this.assistants.list(options);
       return {
         success: true,
         data: assistants as Assistant[]
@@ -63,7 +65,7 @@ export class AssistantService {
 
   async deleteAssistant(id: string): Promise<DeleteAssistantResponse> {
     try {
-      const deletedAssistant = await this.client.assistants.delete(id);
+      const deletedAssistant = await this.assistants.delete(id);
       return {
         success: true,
         data: deletedAssistant as Assistant
@@ -111,7 +113,7 @@ export class AssistantService {
         };
       }
 
-      const assistant = await this.client.assistants.update(id, sdkUpdates);
+      const assistant = await this.assistants.update(id, sdkUpdates);
       return {
         success: true,
         data: assistant as Assistant

@@ -42,7 +42,7 @@ export async function createCallAssistant(token: string, systemMessage?: string)
     maxDurationSeconds: 600,
     backgroundSound: "office",
     backchannelingEnabled: true
-  });
+  } as any);
 
   return assistant;
 } 

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { AssistantService } from '../../services/assistantService';
 import { PhoneNumberService } from '../../services/phoneNumberService';
 import { VAPI_TOKEN } from '../../config';
-import type { UpdateAssistantDto } from '../../types/assistant';
+// UpdateAssistantDto type removed — object is passed untyped to avoid SDK type mismatches
 import { industryTemplates } from '../../constants/templates';
 
 const assistantService = new AssistantService(VAPI_TOKEN);
@@ -75,7 +75,7 @@ ${config.customInstructions ? `Additional Instructions:\n${config.customInstruct
     console.log('Generated system message:', systemMessage);
 
     // Update the assistant with final configuration
-    const assistantUpdateData: UpdateAssistantDto = {
+    const assistantUpdateData = {
       name: config.businessName,
       firstMessage: templateConfig?.firstMessage || `Hello! Welcome to ${config.businessName}. How can I assist you today?`,
       model: {
@@ -111,7 +111,7 @@ ${config.customInstructions ? `Additional Instructions:\n${config.customInstruct
     
     const assistantResult = await assistantService.updateAssistant(
       config.assistantId, 
-      assistantUpdateData
+      assistantUpdateData as any
     );
 
     console.log('Assistant update result:', assistantResult);

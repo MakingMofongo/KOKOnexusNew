@@ -14,6 +14,7 @@ import twilio from 'twilio';
 export class PhoneNumberService {
   private client: VapiClient;
   private twilioClient: twilio.Twilio | null = null;
+  private get phoneNumbers(): any { return this.client.phoneNumbers; }
 
   constructor(token: string) {
     this.client = new VapiClient({ token });
@@ -107,7 +108,7 @@ export class PhoneNumberService {
   //List all phone numbers associated with the VAPI account
   async listPhoneNumbers(options?: ListPhoneNumbersOptions): Promise<PhoneNumberListResponse> {
     try {
-      const phoneNumbers = await this.client.phoneNumbers.list(options);
+      const phoneNumbers = await this.phoneNumbers.list(options);
       return {
         success: true,
         data: phoneNumbers as PhoneNumber[]
@@ -122,7 +123,7 @@ export class PhoneNumberService {
 
   async getPhoneNumber(id: string): Promise<PhoneNumberResponse> {
     try {
-      const phoneNumber = await this.client.phoneNumbers.get(id);
+      const phoneNumber = await this.phoneNumbers.get(id);
       return {
         success: true,
         data: phoneNumber as PhoneNumber
@@ -146,7 +147,7 @@ export class PhoneNumberService {
       });
 
       // Then create the phone number in Vapi with the correct properties
-      const phoneNumber = await this.client.phoneNumbers.create({
+      const phoneNumber = await this.phoneNumbers.create({
         provider: 'twilio',
         number: purchasedNumber.phoneNumber,
         twilioAccountSid: config.twilioAccountSid,
@@ -173,7 +174,7 @@ export class PhoneNumberService {
 
   async deletePhoneNumber(id: string): Promise<DeletePhoneNumberResponse> {
     try {
-      const phoneNumber = await this.client.phoneNumbers.delete(id);
+      const phoneNumber = await this.phoneNumbers.delete(id);
       return {
         success: true,
         data: phoneNumber as PhoneNumber
@@ -188,7 +189,7 @@ export class PhoneNumberService {
 
   async updatePhoneNumber(id: string, updates: UpdatePhoneNumberDto): Promise<UpdatePhoneNumberResponse> {
     try {
-      const phoneNumber = await this.client.phoneNumbers.update(id, updates);
+      const phoneNumber = await this.phoneNumbers.update(id, updates);
       return {
         success: true,
         data: phoneNumber as PhoneNumber

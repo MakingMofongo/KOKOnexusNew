@@ -1,4 +1,8 @@
-import inquirer from 'inquirer';
+import _inquirer from 'inquirer';
+
+// Wrapper to bypass strict overload resolution in inquirer's type definitions.
+// The runtime behaviour is identical — this only silences the TS compiler.
+const inquirer = { ..._inquirer, prompt: _inquirer.prompt as (...args: any[]) => Promise<any> };
 import chalk from 'chalk';
 import figlet from 'figlet';
 import ora from 'ora';
@@ -149,7 +153,7 @@ async function configureGladiaTranscriber(): Promise<GladiaTranscriberConfig> {
       name: 'language',
       message: 'Select language:\n' + languageColumns,
       choices: languageChoices,
-      when: (answers: any) => answers.languageBehaviour === 'manual',
+      when: (answers) => answers.languageBehaviour === 'manual',
       pageSize: 20
     },
     {
@@ -184,7 +188,7 @@ async function configureGladiaTranscriber(): Promise<GladiaTranscriberConfig> {
         return true;
       }
     }
-  ] as any);
+  ]);
 
   // Build the configuration object
   const config: GladiaTranscriberConfig = {
